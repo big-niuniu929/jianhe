@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>OfferFit · 求OfferFit习工作台</title>
+<style>
+:root{
+  --paper:#f7f3ea; --paper-2:#fffdf8; --desk:#e9e3d5;
+  --ink:#1d1b17; --ink-2:#4a453c; --muted:#7a7367;
+  --line:#d7cfbe; --line-2:#e8e1d2;
+  --accent:#b23a2c; --accent-soft:#f3ded8;
+  --green:#2e6b63; --green-soft:#dfeae6;
+  --gold:#9a7b34; --gold-soft:#f1e8d2;
+  --radius:2px;
+  --shadow:0 1px 0 rgba(29,27,23,.04), 0 8px 24px -18px rgba(29,27,23,.45);
+  --serif:"Songti SC","Source Han Serif SC","Noto Serif SC",Georgia,"Times New Roman",serif;
+  --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
+input,textarea,select{font:inherit;color:inherit}
+::selection{background:var(--accent-soft)}
+.app{max-width:1440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.topbar{display:flex;align-items:center;gap:22px;padding:14px 26px;border-bottom:1px solid var(--line);background:var(--paper-2);position:sticky;top:0;z-index:30}
+.brand{display:flex;align-items:center;gap:10px;min-width:190px}
+.logo{width:34px;height:34px;display:grid;place-items:center;background:var(--ink);color:var(--paper);font-family:var(--serif);font-size:19px}
+.brand strong{display:block;font-size:17px;letter-spacing:.12em;font-family:var(--serif)}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:.14em}
+.tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{padding:8px 13px;color:var(--ink-2);font-size:13px;white-space:nowrap;border-bottom:2px solid transparent;letter-spacing:.04em}
+.tabs button:hover{color:var(--ink)}
+.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.acct{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.main{flex:1;padding:26px;overflow:auto}
+.view{display:none}
+body.no-anim .view{animation:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.h1{font-family:var(--serif);font-size:30px;line-height:1.25;margin:0 0 6px}
+.h2{font-family:var(--serif);font-size:20px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:18px 20px}
+.row{display:flex;gap:14px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;color:var(--ink-2);background:var(--paper-2)}
+.chip.green{background:var(--green-soft);border-color:#bcd6cf;color:var(--green)}
+.chip.red{background:var(--accent-soft);border-color:#e5bdb3;color:var(--accent)}
+.chip.gold{background:var(--gold-soft);border-color:#e2d3ae;color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-size:13px;letter-spacing:.05em;border-radius:var(--radius);transition:.18s}
+.btn:hover{transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.accent{background:var(--accent);border-color:var(--accent)}
+.btn.sm{padding:5px 11px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.meta{font-size:11.5px;color:var(--muted);letter-spacing:.06em}
+.divider{height:1px;background:var(--line-2);margin:16px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.bar{height:6px;background:var(--line-2);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--ink);border-radius:999px;transition:width .6s}
+.bar.accent>i{background:var(--accent)}
+.bar.green>i{background:var(--green)}
+.note{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:10px}
+.pill{font-size:10.5px;letter-spacing:.12em;color:var(--muted)}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+.grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:6px 2px 22px;flex-wrap:wrap}
+.hero .date{font-size:12px;color:var(--muted);letter-spacing:.2em}
+.stat .num{font-family:var(--serif);font-size:32px;line-height:1.1}
+.stat .num small{font-size:13px;color:var(--muted);font-family:var(--sans);margin-left:3px}
+.stat .cap{font-size:12px;color:var(--muted);margin-top:2px}
+.task{display:flex;gap:12px;padding:11px 0;border-top:1px dashed var(--line-2)}
+.task:first-of-type{border-top:none}
+.task .box{width:16px;height:16px;border:1px solid var(--line);margin-top:3px;flex:none;display:grid;place-items:center;font-size:11px;color:var(--paper);cursor:pointer;background:var(--paper-2)}
+.task.done .box{background:var(--green);border-color:var(--green)}
+.task.done .t{text-decoration:line-through;color:var(--muted)}
+.task>div{min-width:0}
+.task .t{font-size:13.5px;overflow-wrap:anywhere}
+.task .d{overflow-wrap:anywhere}
+.task .d{font-size:11.5px;color:var(--muted)}
+/* 简历 */
+.resume-grid{display:grid;grid-template-columns:270px minmax(420px,1fr) 380px;gap:16px;align-items:start}
+.paper-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.paper{width:100%;max-width:560px;aspect-ratio:1/1.414;background:#fff;border:1px solid var(--line);box-shadow:0 18px 40px -30px rgba(0,0,0,.6);padding:34px 38px;font-size:10.5px;line-height:1.65;color:#24221e;overflow:hidden}
+.paper h1{font-family:var(--sans);font-size:24px;margin:0 0 2px;letter-spacing:normal;font-weight:700}
+.paper .head-row{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid #24221e;padding-bottom:8px;margin-bottom:12px}
+.paper .contact{font-size:9px;color:#5a554b;text-align:right;line-height:1.7}
+.paper .sec{margin-bottom:11px}
+.paper .sec-t{font-size:10.5px;letter-spacing:normal;color:#b23a2c;border-bottom:1px solid #ddd6c8;padding-bottom:3px;margin-bottom:6px;font-weight:700}
+.paper .item{margin-bottom:7px}
+.paper .item-h{display:flex;justify-content:space-between;font-weight:700;font-size:10.5px}
+.paper .item-s{color:#5a554b;font-size:9.5px}
+.paper ul{margin:3px 0 0;padding-left:14px}
+.paper li{margin-bottom:2px}
+.paper li.changed{background:#f4e3dd;outline:1px solid #e0b6aa}
+.verbar{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.verbar .v{white-space:nowrap;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;background:var(--paper-2)}
+.verbar .v.active{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.diag-row{display:flex;justify-content:space-between;font-size:12.5px;margin:8px 0 3px}
+.issue{padding:9px 0;border-top:1px dashed var(--line-2);font-size:12.5px}
+.issue .tag{font-size:10px;color:var(--accent);letter-spacing:.1em}
+.issue{overflow-wrap:anywhere}
+.issue .fix{color:var(--muted);font-size:11.5px;margin-top:2px}
+.match-ring{display:flex;align-items:center;gap:16px;margin:6px 0 12px}
+.ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p)*1%), var(--line-2) 0);position:relative;flex:none}
+.ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--paper-2)}
+.ring b{position:relative;font-family:var(--serif);font-size:26px}
+.ring small{position:relative;font-size:10px;color:var(--muted);margin-left:1px}
+.suggest{border:1px solid var(--line);background:var(--paper-2);padding:12px;margin-bottom:10px}
+.suggest .orig{color:var(--muted);font-size:11.5px;margin-bottom:5px}
+.suggest .new{font-size:13px;margin-bottom:6px}
+.suggest .why{font-size:11.5px;color:var(--ink-2)}
+.suggest .why b{color:var(--accent)}
+.suggest .acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.jd-input{width:100%;min-height:74px;resize:vertical;border:1px solid var(--line);background:#fff;padding:9px 11px;font-size:12.5px;border-radius:var(--radius);outline:none}
+.jd-input:focus{border-color:var(--ink)}
+/* 面试 */
+.interview{max-width:1020px;margin:0 auto}
+.setup{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.opt-row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.stage{display:none;max-width:860px;margin:0 auto}
+.stage.show{display:block}
+.avatar-box{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,#fbf8f1,#f1ece0);padding:10px;display:flex;flex-direction:column;align-items:center}
+.avatar-box canvas{width:230px;height:230px;display:block}
+.avatar-status{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);letter-spacing:.1em;margin-top:4px}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.chat{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.msg{max-width:82%;padding:11px 14px;border:1px solid var(--line);background:var(--paper-2);font-size:13.5px}
+.msg.ai{border-left:3px solid var(--accent)}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.msg .who{font-size:10px;letter-spacing:.14em;color:var(--muted);margin-bottom:3px}
+.msg.me .who{color:#c9c2b3}
+.msg .quote{color:var(--accent);font-size:11.5px;margin-top:4px}
+.typing i{display:inline-block;width:4px;height:4px;background:var(--muted);border-radius:50%;margin-right:3px;animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+.answer-box{border:1px solid var(--line);background:var(--paper-2);padding:10px;margin-top:12px}
+.answer-box textarea{width:100%;min-height:58px;border:none;outline:none;background:transparent;resize:vertical;font-size:13.5px}
+.answer-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.rec{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.rec .mic{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:var(--paper-2);font-size:14px}
+.rec.on .mic{background:var(--accent);color:#fff;border-color:var(--accent);animation:pulse 1s infinite}
+.progress-dots{display:flex;gap:6px;justify-content:center;margin:10px 0 2px}
+.progress-dots i{width:26px;height:3px;background:var(--line);display:block}
+.progress-dots i.on{background:var(--accent)}
+.feedback{font-size:11.5px;color:var(--green);border-left:2px solid var(--green);padding-left:8px;margin:6px 0}
+/* 复盘 */
+.score-head{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0}
+.score .num{font-family:var(--serif);font-size:30px}
+.score .cap{font-size:11.5px;color:var(--muted)}
+.qcard{border:1px solid var(--line);background:var(--paper-2);margin-bottom:10px}
+.qcard-h{display:flex;justify-content:space-between;gap:12px;padding:13px 15px;cursor:pointer;align-items:flex-start}
+.qcard-h .q{font-size:13.5px;max-width:70%}
+.qcard-h .sc{font-family:var(--serif);font-size:19px;white-space:nowrap}
+.qcard-b{display:none;border-top:1px solid var(--line-2);padding:13px 15px;font-size:12.5px}
+.qcard.open .qcard-b{display:block}
+.dim{display:grid;grid-template-columns:70px 1fr 42px;gap:8px;align-items:center;font-size:11.5px;margin:5px 0}
+.badge{font-size:10px;padding:1px 6px;border-radius:999px;letter-spacing:.08em}
+.badge.red{background:var(--accent-soft);color:var(--accent)}
+.badge.green{background:var(--green-soft);color:var(--green)}
+.badge.gold{background:var(--gold-soft);color:var(--gold)}
+.ans-block{background:var(--paper);border:1px dashed var(--line);padding:10px 12px;margin-top:8px;font-size:12.5px}
+.ans-block .t{font-size:10px;letter-spacing:.16em;color:var(--accent);margin-bottom:3px}
+/* 台账 */
+.table{width:100%;border-collapse:collapse;font-size:12.5px}
+.table th{text-align:left;font-weight:600;color:var(--muted);font-size:11px;letter-spacing:.1em;padding:8px 10px;border-bottom:1px solid var(--line)}
+.table td{padding:11px 10px;border-bottom:1px solid var(--line-2)}
+.table tr:hover td{background:var(--paper-2)}
+.empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+.toggle{width:38px;height:21px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:.2s}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on{background:var(--green)}
+.toggle.on::after{left:19px}
+.setting{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px dashed var(--line-2);align-items:flex-start}
+.setting:first-of-type{border-top:none}
+.setting .t{font-size:13px}
+.setting .d{font-size:11.5px;color:var(--muted);margin-top:2px;max-width:460px}
+#toast{position:fixed;left:50%;bottom:98px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:9px 16px;font-size:12.5px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:80vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.mobile-tabs{display:none}
+@media (max-width:1100px){.resume-grid{grid-template-columns:1fr 1fr}.resume-grid .col-jd{grid-column:1/-1}.grid-4{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}}
+@media (max-width:820px){
+  .topbar{padding:10px 14px;gap:10px}.brand small{display:none}.tabs{display:none}.acct{display:none}
+  .main{padding:16px 14px 84px}.h1{font-size:24px}
+  .resume-grid{grid-template-columns:1fr}.resume-grid .col-paper{order:1}.resume-grid .col-profile{order:2}.resume-grid .col-jd{order:3}
+  .paper{padding:22px;font-size:8.6px}.paper h1{font-size:17px}
+  .grid-4{grid-template-columns:1fr 1fr;gap:10px}.setup{grid-template-columns:1fr}
+  .score-head{grid-template-columns:repeat(2,1fr)}.avatar-box canvas{width:190px;height:190px}
+  .mobile-tabs{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--paper-2);border-top:1px solid var(--line);z-index:40;overflow-x:auto;scrollbar-width:none}
+  .mobile-tabs::-webkit-scrollbar{display:none}
+  .mobile-tabs button{flex:1;min-width:60px;padding:9px 4px 11px;font-size:10.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;border-top:2px solid transparent}
+  .mobile-tabs button .ic{font-size:15px;line-height:1}
+  .mobile-tabs button.active{color:var(--accent);border-top-color:var(--accent)}
+  #toast{bottom:74px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">O</div><div><strong>OfferFit</strong><small>求OfferFit习工作台 · MVP v0.1</small></div></div>
+    <nav class="tabs" id="tabs">
+      <button data-view="home" class="active">工作台</button>
+      <button data-view="resume">简历</button>
+      <button data-view="interview">面试陪练</button>
+      <button data-view="report">复盘</button>
+      <button data-view="mistakes">错题本</button>
+      <button data-view="apps">投递台账</button>
+      <button data-view="settings">设置</button>
+    </nav>
+    <div class="acct"><span class="dot"></span><span id="acctName">本地 · 单用户</span></div>
+  </header>
+  <main class="main">
+
+    <!-- 工作台 -->
+    <section class="view active" id="view-home">
+      <div class="hero">
+        <div>
+          <div class="date" id="today"></div>
+          <h1 class="h1" id="greeting">你好。</h1>
+          <p class="sub" id="homeSub">正在加载档案…</p>
+        </div>
+        <div class="hero-actions" style="display:flex;gap:10px">
+          <button class="btn ghost" onclick="go('resume')">继续改简历</button>
+          <button class="btn accent" onclick="go('interview')">开始一场练习 →</button>
+        </div>
+      </div>
+      <div class="grid-4" id="homeStats"></div>
+      <div class="grid-2">
+        <div class="card pad">
+          <div class="between"><h2 class="h2" style="margin:0">今天要处理的事</h2><span class="pill">来自真实诊断</span></div>
+          <div id="homeTasks" style="margin-top:10px"></div>
+        </div>
+        <div class="card pad">
+          <h2 class="h2">练习状态</h2>
+          <dl class="kv" id="homeWeek"></dl>
+          <div class="divider"></div>
+          <div class="note" id="homeAdvice">—</div>
+        </div>
+      </div>
+      <div style="margin-top:14px"><span class="meta">MVP v0.6 · 规则引擎 + LLM 出题/追问 + 本地语音转写 + ATS A/B</span></div>
+    </section>
+
+    <!-- 简历 -->
+    <section class="view" id="view-resume">
+      <div class="between" style="margin-bottom:14px;flex-wrap:wrap">
+        <div><h1 class="h1">把简历改到位</h1><p class="sub">贴一个目标岗位的 JD，系统会指出「缺什么、哪句要改、改完能不能抗追问」。</p></div>
+        <div>
+          <div class="verbar" id="verbar"></div>
+          <div class="meta" id="variantDiff" style="margin-top:5px;text-align:right"></div>
+        </div>
+      </div>
+      <div class="resume-grid">
+        <div class="col-profile">
+          <div class="card pad">
+            <div class="between"><h2 class="h2" style="margin:0">档案</h2><span class="chip green" id="completeness">—</span></div>
+            <dl class="kv" id="profileKv" style="margin-top:10px"></dl>
+            <div class="divider"></div>
+            <div class="meta" style="letter-spacing:.16em">HR 视角诊断 <span id="lintScore" style="color:var(--accent)"></span></div>
+            <div id="lintDims" style="margin-top:6px"></div>
+            <div class="divider"></div>
+            <div id="lintIssues"></div>
+            <div class="divider"></div>
+            <div class="between"><div class="meta" style="letter-spacing:.16em">ATS 可解析性</div><span class="meta" id="atsSummary"></span></div>
+            <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">
+              <button class="btn sm ghost" onclick="atsRender()">导出 PDF 并回读</button>
+              <a id="atsPdfLink" class="btn sm ghost" style="display:none" href="/exports/resume.pdf" target="_blank">下载 PDF</a>
+            </div>
+            <div id="atsList" style="margin-top:8px;max-height:300px;overflow:auto"></div>
+          </div>
+        </div>
+        <div class="col-paper paper-wrap">
+          <div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+            <button class="btn sm ghost" onclick="document.getElementById('resumeFile').click()">上传简历解析</button>
+            <input id="resumeFile" type="file" accept=".docx,.txt,.md,.pdf" style="display:none" onchange="uploadResume(this)">
+            <button class="btn sm ghost" onclick="toast('MVP：模板切换在下一阶段')">模板：单栏</button>
+            <button class="btn sm" onclick="window.print()">导出 / 打印</button>
+          </div>
+          <div class="paper" id="paper"></div>
+          <div class="meta">A4 单页 · 文字层保留 · 打印 1 页</div>
+        </div>
+        <div class="col-jd">
+          <div class="card pad">
+            <div class="between"><h2 class="h2" style="margin:0">按 JD 优化</h2><span class="pill">规则引擎</span></div>
+            <div class="meta" style="margin:8px 0">贴目标岗位 JD：</div>
+            <textarea class="jd-input" id="jdText" placeholder="把招聘 JD 整段粘贴进来…">岗位：用户增长运营实习生
+职责：负责私域用户增长、社群运营与活动策划；通过数据分析定位增长机会；与产品、算法团队协作落地实验；输出周报并复盘。
+要求：熟悉 SQL / Excel；有 A/B 测试意识；有社群或内容运营经验；沟通协作能力强。</textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+              <button class="btn sm accent" id="btnAnalyze" onclick="analyzeJD()">分析匹配</button>
+              <span class="meta" id="jdHint"></span>
+            </div>
+            <div id="jdResult" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 面试陪练 -->
+    <section class="view" id="view-interview">
+      <div class="interview">
+        <div id="setupPanel">
+          <h1 class="h1">练一场面试</h1>
+          <p class="sub">基于你的简历和目标 JD 出题，会追问，答完给逐题评分与改法。</p>
+          <div class="setup" style="margin-top:16px">
+            <div class="card pad">
+              <h2 class="h2">这场练什么</h2>
+              <div class="meta">目标岗位</div>
+              <input class="jd-input" id="roleInput" style="min-height:auto;height:38px;margin-top:4px" value="用户增长运营实习生 · 字节跳动">
+              <div class="meta" style="margin-top:12px">目标 JD（可留空）</div>
+              <textarea class="jd-input" id="practiceJD" style="min-height:64px;margin-top:4px">职责：负责私域用户增长、社群运营与活动策划；通过数据分析定位增长机会；与产品、算法团队协作落地实验。
+要求：熟悉 SQL / Excel；有 A/B 测试意识；有社群或内容运营经验。</textarea>
+              <div class="meta">轮次</div>
+              <div class="opt-row" id="roundRow">
+                <button class="btn sm ghost" data-r="3">3 轮</button>
+                <button class="btn sm" data-r="5" style="background:var(--ink);color:var(--paper);border-color:var(--ink)">5 轮</button>
+                <button class="btn sm ghost" data-r="7">7 轮</button>
+              </div>
+              <div class="setting"><div><div class="t">语音朗读</div><div class="d">面试官用中文语音提问；TTS 失败自动降级为浏览器语音 / 文字</div></div><div class="toggle on" id="ttsToggle" onclick="toggleTTS(this)"></div></div>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+                <button class="btn accent" onclick="startInterview()">开始面试 →</button>
+                <span class="meta">规则出题 · 不需要 API Key</span>
+              </div>
+            </div>
+            <div class="card pad">
+              <h2 class="h2">会基于这些提问</h2>
+              <dl class="kv" id="practiceBasis"></dl>
+              <div class="divider"></div>
+              <div class="note">追问来自你回答里最弱的一个检查点（具体 / 数字 / 角色边界 / 结果），只追一层，不会无限挖。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage" id="stagePanel">
+          <div class="between" style="margin-bottom:10px">
+            <div><div class="meta" id="stageMeta"></div><div style="font-family:var(--serif);font-size:20px" id="stageRound"></div></div>
+            <button class="btn sm ghost" onclick="finishInterview()">提前结束</button>
+          </div>
+          <div class="avatar-box">
+            <canvas id="avatar" width="460" height="460"></canvas>
+            <div class="avatar-status"><span class="pulse"></span><span id="avatarState">待机中</span></div>
+          </div>
+          <div class="progress-dots" id="dots"></div>
+          <div class="chat" id="chat"></div>
+          <div class="answer-box">
+            <textarea id="answerInput" placeholder="按「场景 → 任务 → 行动 → 结果」作答。写清楚能给面试官一个真正的回答就行。"></textarea>
+            <div class="answer-foot">
+              <div class="quick"><span class="chip" onclick="fillAnswer('我在示例公司实习时负责电商平台店铺的价格巡检，覆盖 4 个店铺、300 多个 SKU')">我在示例公司实习时…</span></div>
+              <div class="row" style="align-items:center;gap:8px">
+                <button class="btn sm ghost" id="recBtn" onclick="toggleRec()">🎙 录音</button>
+                <button class="btn sm accent" onclick="sendAnswer()">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 复盘 -->
+    <section class="view" id="view-report">
+      <div class="between" style="margin-bottom:6px;flex-wrap:wrap">
+        <div><h1 class="h1">复盘报告</h1><p class="sub" id="reportMeta">还没有练习记录。</p></div>
+        <div class="row"><button class="btn ghost sm" onclick="go('interview')">再练一场</button><button class="btn sm" onclick="window.print()">打印报告</button></div>
+      </div>
+      <div id="reportHistory" class="meta" style="margin-bottom:12px"></div>
+      <div id="reportBody"><div class="empty">从上方历史练习里选一场，或先去「面试陪练」跑一场。</div></div>
+    </section>
+
+    <!-- 错题本 -->
+    <section class="view" id="view-mistakes">
+      <h1 class="h1">错题本</h1>
+      <p class="sub">不是「答错的题」，是「会被追问到答不好的点」。每一条都能直接重练。</p>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card pad"><h2 class="h2">弱项</h2><div id="mistakeList"></div></div>
+        <div class="card pad"><h2 class="h2">从诊断来的待办</h2><div id="mistakeIssues"></div></div>
+      </div>
+      <div class="card pad" style="margin-top:14px"><h2 class="h2">训练计划</h2><div id="trainingPlan"></div></div>
+    </section>
+
+    <!-- 投递台账 -->
+    <section class="view" id="view-apps">
+      <div class="between" style="flex-wrap:wrap">
+        <div><h1 class="h1">投递台账</h1><p class="sub">投了哪些、到哪一步——一条时间线看完。</p></div>
+        <button class="btn sm" onclick="addApp()">＋ 记录一次投递</button>
+      </div>
+      <div class="grid-4" id="appStats" style="margin-top:16px"></div>
+      <div class="card" style="margin-top:14px;overflow:hidden"><div id="appTable"></div></div>
+      <div class="note" style="margin-top:10px">原则：同一个岗没练过就投，是浪费机会；练过再投，命中率差一个量级。</div>
+    </section>
+
+    <!-- 设置 -->
+    <section class="view" id="view-settings">
+      <h1 class="h1">设置</h1>
+      <p class="sub">MVP 阶段只跑在本机，数据在本地 SQLite。</p>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card pad">
+          <h2 class="h2">运行信息</h2>
+          <dl class="kv" id="runtimeKv"></dl>
+          <div class="divider"></div>
+          <div class="setting"><div><div class="t">数据导出</div><div class="d">导出档案、版本、练习记录与投递记录（JSON）</div></div><a class="btn sm ghost" href="/api/export/all">导出</a></div>
+          <div class="setting"><div><div class="t">删除全部数据</div><div class="d">清空档案/练习/投递，恢复示例档案；不可恢复</div></div><button class="btn sm ghost" style="color:var(--accent);border-color:var(--accent)" onclick="deleteAllData()">删除</button></div>
+        </div>
+        <div class="card pad">
+          <h2 class="h2">隐私</h2>
+          <div class="setting"><div><div class="t">录音保存</div><div class="d">语音下一阶段接入；关闭后只保存转写</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting"><div><div class="t">简历本地存储</div><div class="d">当前已是本地 SQLite，不出本机</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting"><div><div class="t">本地模型（Ollama）</div><div class="d">下一阶段：接本地 STT / LLM</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <div class="between"><h2 class="h2" style="margin:0">模型设置（可选）</h2><span class="meta" id="llmStatus">读取中…</span></div>
+        <div class="row" style="flex-wrap:wrap;align-items:center;margin-top:10px">
+          <select id="llmProvider" class="jd-input" style="min-height:auto;height:36px;max-width:200px" onchange="llmPreset(this.value)">
+            <option value="deepseek">DeepSeek</option>
+            <option value="openai">OpenAI</option>
+            <option value="custom">自定义（OpenAI 兼容）</option>
+          </select>
+          <input id="llmBase" class="jd-input" style="min-height:auto;height:36px;max-width:280px" placeholder="base_url">
+          <input id="llmModel" class="jd-input" style="min-height:auto;height:36px;max-width:200px" placeholder="model">
+        </div>
+        <div class="row" style="flex-wrap:wrap;align-items:center;margin-top:8px">
+          <input id="llmKey" class="jd-input" type="password" style="min-height:auto;height:36px;max-width:320px" placeholder="API Key（保存后只显示后 4 位）">
+          <button class="btn sm accent" onclick="saveLLM()">保存</button>
+          <button class="btn sm ghost" onclick="testLLM()">测试连通</button>
+          <button class="btn sm ghost" onclick="clearLLM()">清除 Key</button>
+        </div>
+        <div class="note" style="margin-top:10px">未配置时出题与追问走规则引擎（离线可用）；配置后自动切 LLM，调用失败自动回退规则，不阻塞练习。</div>
+      </div>
+    </section>
+
+  </main>
+  <nav class="mobile-tabs" id="mobileTabs">
+    <button data-view="home" class="active"><span class="ic">◉</span>工作台</button>
+    <button data-view="resume"><span class="ic">▤</span>简历</button>
+    <button data-view="interview"><span class="ic">◍</span>陪练</button>
+    <button data-view="report"><span class="ic">✓</span>复盘</button>
+    <button data-view="mistakes"><span class="ic">✎</span>错题</button>
+    <button data-view="apps"><span class="ic">≡</span>台账</button>
+    <button data-view="settings"><span class="ic">⚙</span>设置</button>
+  </nav>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ==================== 工具 ==================== */
+var S = {profile:null, lint:null, ats:null, completeness:null, apps:[], sessions:[], latest:null, jd:null, sid:null, question:null, report:null};
+function $(sel){ return document.querySelector(sel); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
+async function api(path, opts){
+  var res = await fetch(path, Object.assign({headers:{'Content-Type':'application/json'}}, opts||{}));
+  if(!res.ok) throw new Error('HTTP '+res.status+' '+path);
+  return await res.json();
+}
+function toast(msg){
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm=setTimeout(function(){t.classList.remove('show');},2200);
+}
+function go(view){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  var el=document.getElementById('view-'+view); if(el) el.classList.add('active');
+  document.querySelectorAll('#tabs button,#mobileTabs button').forEach(function(b){b.classList.toggle('active',b.dataset.view===view);});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('#tabs button,#mobileTabs button').forEach(function(b){ b.addEventListener('click',function(){go(b.dataset.view);}); });
+
+/* ==================== 启动 ==================== */
+async function boot(){
+  document.getElementById('today').textContent = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'long'});
+  try{
+    S = await api('/api/bootstrap');
+    S.lint = S.lint || {};
+    renderHome(); renderProfile(); renderAts(); renderPaper(); renderJD(null); loadVariants();
+    renderApps(); renderSettings(); loadLLM();
+    if(S.latest && S.latest.report){ S.report=S.latest.report; renderReport(S.latest.report, S.latest.session); }
+    renderMistakes();
+    renderReportHistory();
+  }catch(e){
+    toast('后端没连上：'+e.message);
+    document.getElementById('homeSub').textContent='后端未启动：请用 start.bat 或 uvicorn 启动后再刷新。';
+  }
+}
+
+/* ==================== 工作台 ==================== */
+function renderHome(){
+  var p=S.profile, l=S.lint, c=S.completeness||{score:0}, sessions=S.sessions||[];
+  document.getElementById('greeting').textContent = '晚上好，'+(p.basic&&p.basic.name?p.basic.name:'同学')+'。';
+  var issues=(l.issues||[]);
+  document.getElementById('homeSub').textContent = '诊断 ' + (l.score||0) + ' 分 · ' + (issues.length||0) + ' 条可改问题 · 完成度 ' + c.score + '%';
+  var last = sessions.find(function(s){return s.report||s.total;});
+  var avg = last && last.total ? last.total : '—';
+  document.getElementById('homeStats').innerHTML =
+    stat('简历完整度', c.score, '%', '优先补：'+((c.items||[]).filter(function(i){return !i.ok}).slice(0,1).map(function(i){return i.name}).join(''))||'已齐') +
+    stat('诊断分', l.score||0, '', '等级 '+((l.grade)||'—')+' · 问题 '+(issues.length||0)+' 条') +
+    stat('练习场次', (S.sessions||[]).length, '场', last?'最近总评 '+last.total+' 分':'还没练过') +
+    stat('投递记录', (S.apps||[]).length, '条', '练过再投，命中率更高');
+  var tasks = (l.top3||[]).slice(0,3).map(function(i){
+    return '<div class="task" onclick="this.classList.toggle(\'done\')"><div class="box">✓</div><div><div class="t">'+esc(i.rule||'待改')+'：'+esc((i.problem||'').slice(0,40))+'</div><div class="d">'+esc(i.fix||'')+'</div></div></div>';
+  }).join('') || '<div class="empty">暂无诊断问题，先补档案。</div>';
+  document.getElementById('homeTasks').innerHTML = tasks;
+  var w = S.latest && S.latest.report;
+  document.getElementById('homeWeek').innerHTML =
+    '<dt>练习场次</dt><dd>'+sessions.length+' 场</dd>'+
+    '<dt>最近总评</dt><dd>'+(w?w.total+' 分':'—')+'</dd>'+
+    '<dt>最近模式</dt><dd>'+(last? (last.mode==='voice'?'语音':'文字') : '—')+'</dd>'+
+    '<dt>数据存储</dt><dd>本地 SQLite</dd>';
+  document.getElementById('homeAdvice').textContent = (l.top3&&l.top3[0]) ? ('优先处理：'+(l.top3[0].problem||'').slice(0,60)) : '先补档案，再跑一场练习。';
+}
+function stat(label,num,unit,cap){
+  return '<div class="card pad stat"><div class="cap">'+label+'</div><div class="num">'+num+'<small>'+unit+'</small></div><div class="cap" style="margin-top:6px">'+esc(cap)+'</div></div>';
+}
+
+/* ==================== 简历 ==================== */
+function renderProfile(){
+  var p=S.profile, l=S.lint||{}, c=S.completeness||{score:0};
+  document.getElementById('completeness').textContent='完整度 '+c.score+'%';
+  document.getElementById('profileKv').innerHTML =
+    '<dt>姓名</dt><dd>'+esc(p.basic.name||'—')+'</dd>'+
+    '<dt>院校</dt><dd>'+esc((p.education[0]||{}).school||'—')+' · '+esc((p.education[0]||{}).major||'')+'</dd>'+
+    '<dt>目标</dt><dd>'+esc((p.intent.targetRoles||[]).join(' / ')||'—')+'</dd>'+
+    '<dt>可用</dt><dd>'+esc(p.intent.available||'—')+'</dd>';
+  document.getElementById('lintScore').textContent = (l.score||0)+' 分 · '+(l.grade||'—');
+  document.getElementById('lintDims').innerHTML = (l.dimensions||[]).map(function(d){
+    return '<div class="diag-row"><span>'+esc(d.name)+'</span><span>'+d.score+'</span></div><div class="bar"><i style="width:'+d.score+'%"></i></div>';
+  }).join('');
+  var issues=(l.issues||[]).slice(0,6);
+  document.getElementById('lintIssues').innerHTML = issues.map(function(i){
+    return '<div class="issue"><div class="tag">'+esc(i.rule||'')+'</div>'+esc((i.problem||'').slice(0,70))+'<div class="fix">'+esc(i.fix||'')+'</div></div>';
+  }).join('') || '<div class="meta">没有发现问题。</div>';
+}
+async function atsRender(){
+  toast('正在渲染 PDF 并回读文字层…');
+  try{
+    var r = await api('/api/ats/render',{method:'POST',body:'{}'});
+    if(!r.ok){ toast(r.error||'渲染失败'); return; }
+    S.ats = r.ats;
+    renderAts();
+    var link = document.getElementById('atsPdfLink');
+    link.style.display = 'inline-flex';
+    link.href = r.pdf_url + '?t=' + Date.now();
+    toast('回读完成：' + (r.pdf.pages||0) + ' 页 / ' + (r.pdf.text_chars||0) + ' 字 / 字体 ' + (r.pdf.fonts||0) + ' 个');
+  }catch(e){ toast('回读失败：'+e.message); }
+}
+
+function renderAts(){
+  var a = S.ats; if(!a) return;
+  var sm = a.summary || {};
+  document.getElementById('atsSummary').textContent = '通过 '+(sm.passed||0)+' · 警告 '+(sm.warned||0)+' · 失败 '+(sm.failed||0)+' · 未检 '+(sm.skipped||0);
+  var items = (a.items||[]);
+  var order = {fail:0, warn:1, pass:2, info:3, skipped:4};
+  items.sort(function(x,y){ return (order[x.status]||9)-(order[y.status]||9); });
+  var badge = {fail:'red', warn:'gold', pass:'green', info:'', skipped:''};
+  var label = {fail:'失败', warn:'警告', pass:'通过', info:'建议', skipped:'未检'};
+  document.getElementById('atsList').innerHTML = items.map(function(it){
+    return '<div class="issue"><div class="tag"><span class="badge '+(badge[it.status]||'')+'">'+(label[it.status]||it.status)+'</span> '+esc(it.problem||'')+'</div>'+
+      (it.status==='pass'?'':'<div class="fix">'+esc(it.fix||'')+'</div>')+'</div>';
+  }).join('');
+}
+async function uploadResume(input){
+  var f = input.files && input.files[0]; if(!f) return;
+  toast('正在解析 '+f.name+' …');
+  var fd = new FormData(); fd.append('file', f);
+  try{
+    var res = await fetch('/api/parse-upload', {method:'POST', body:fd});
+    var r = await res.json();
+    input.value = '';
+    if(!r.ok){ toast(r.error||'解析失败'); return; }
+    var lines = (r.preview||[]).map(function(x){ return x.section+'：'+x.text; }).join(String.fromCharCode(10));
+    var ok = confirm('解析出 '+r.chars+' 字：'+String.fromCharCode(10,10)+lines+String.fromCharCode(10,10)+'要覆盖当前档案吗？（MVP 不自动备份）');
+    if(!ok) return;
+    var imp = await (await fetch('/api/profile/import', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({profile:r.profile})})).json();
+    if(imp.ok){
+      S.profile=imp.profile; S.lint=imp.lint; S.ats=imp.ats; S.completeness=imp.completeness;
+      renderHome(); renderProfile(); renderAts(); renderPaper(); renderMistakes();
+      toast('已导入：诊断 '+(imp.lint.score||0)+' 分');
+    }
+  }catch(e){ toast('解析失败：'+e.message); }
+}
+
+function renderPaper(){
+  var p=S.profile, b=p.basic||{}, it=p.intent||{};
+  function bullets(sec){
+    return (p[sec]||[]).map(function(item){
+      var title = item.org || item.name || '';
+      var role = item.role || '';
+      var head = '<div class="item"><div class="item-h"><span>'+esc(title)+(role?' · '+esc(role):'')+'</span><span>'+esc(item.time||'')+'</span></div>';
+      var bl = (item.bullets||[]).map(function(x){
+        return '<li>'+esc(x.text||'')+'</li>';
+      }).join('');
+      return head+'<ul>'+bl+'</ul></div>';
+    }).join('');
+  }
+  var skills = (p.skills||[]).map(function(g){
+    if(typeof g==='string') return g;
+    return esc(g.group||'')+'：'+esc((g.items||[]).join('、'));
+  }).join(' ｜ ');
+  document.getElementById('paper').innerHTML =
+    '<div class="head-row"><div><h1>'+esc(b.name||'姓名')+'</h1><div style="font-size:9.5px;color:#5a554b">求职意向：'+esc((it.targetRoles||[]).join(' / ')||'—')+(it.available?' · '+esc(it.available):'')+'</div></div>'+
+    '<div class="contact">'+esc(b.phone||'')+'<br>'+esc(b.email||'')+'<br>'+esc(b.city||'')+'</div></div>'+
+    '<div class="sec"><div class="sec-t">教育背景</div>'+(p.education||[]).map(function(e){
+      return '<div class="item"><div class="item-h"><span>'+esc(e.school||'')+' · '+esc(e.major||'')+'（'+esc(e.degree||'')+'）</span><span>'+esc(e.time||'')+'</span></div><div class="item-s">'+esc((e.notes||[]).join(' · '))+(e.gpa?' · GPA '+esc(e.gpa):'')+'</div></div>';
+    }).join('')+'</div>'+
+    '<div class="sec"><div class="sec-t">实习经历</div>'+(bullets('internships')||'<div class="item-s">—</div>')+'</div>'+
+    '<div class="sec"><div class="sec-t">项目经历</div>'+(bullets('projects')||'<div class="item-s">—</div>')+'</div>'+
+    '<div class="sec"><div class="sec-t">技能</div><div style="font-size:9.5px">'+skills+'</div></div>';
+}
+
+/* ==================== 一岗一版 ==================== */
+var V = {items:[], active:null};
+async function loadVariants(){
+  try{
+    var r = await api('/api/variants');
+    V = {items: r.variants || [], active: r.active || null};
+    renderVariants();
+  }catch(e){}
+}
+function renderVariants(){
+  var bar = document.getElementById('verbar');
+  if(!bar) return;
+  var items = V.items || [];
+  bar.innerHTML = items.map(function(v){
+    var cls = 'v' + (v.active ? ' active' : '');
+    var del = v.id === 'base' ? '' : '<span class="meta" style="cursor:pointer;margin:0 4px 0 -2px;color:var(--accent)" title="删除版本" onclick="deleteVariant(\''+v.id+'\')">×</span>';
+    return '<button class="'+cls+'" onclick="activateVariant(\''+v.id+'\')">'+esc(v.name)+' · '+v.score+'</button>'+del;
+  }).join('') + '<button class="v" onclick="createVariant()">＋ 新建版本</button>';
+  var diff = document.getElementById('variantDiff');
+  if(diff && items.length > 1){
+    diff.innerHTML = '<a style="color:var(--green);cursor:pointer" onclick="diffVariant()">与通用底版对比</a>';
+  }
+}
+async function createVariant(){
+  var name = prompt('版本名（建议「公司 · 岗位」）：');
+  if(!name) return;
+  var jd = document.getElementById('jdText').value || '';
+  try{
+    await api('/api/variants', {method:'POST', body:JSON.stringify({name:name, jd:jd})});
+    await loadVariants();
+    toast('已创建版本：'+name);
+  }catch(e){ toast('创建失败：'+e.message); }
+}
+async function activateVariant(id){
+  if(!id) return;
+  try{
+    var r = await api('/api/variants/activate', {method:'POST', body:JSON.stringify({id:id})});
+    if(!r.ok){ toast(r.error||'切换失败'); return; }
+    S.profile = r.profile; S.lint = r.lint; S.ats = r.ats; S.completeness = r.completeness;
+    var jdEl = document.getElementById('jdText');
+    if(jdEl && typeof r.jd === 'string' && r.jd) jdEl.value = r.jd;
+    renderHome(); renderProfile(); renderAts(); renderPaper(); renderMistakes();
+    await loadVariants();
+    toast('已切换版本');
+  }catch(e){ toast('切换失败：'+e.message); }
+}
+async function diffVariant(){
+  try{
+    var r = await api('/api/variants/diff?vid=base');
+    var el = document.getElementById('variantDiff');
+    var html = '<div style="text-align:left">'+esc(r.summary||'没有差异')+'</div>';
+    if((r.bulletsAdded||[]).length) html += '<div style="text-align:left">新增：'+r.bulletsAdded.slice(0,3).map(function(t){return '「'+esc(t.slice(0,18))+'」'}).join(' ')+'</div>';
+    if((r.bulletsRemoved||[]).length) html += '<div style="text-align:left">删除：'+r.bulletsRemoved.slice(0,3).map(function(t){return '「'+esc(t.slice(0,18))+'」'}).join(' ')+'</div>';
+    if((r.bulletsChanged||[]).length) html += '<div style="text-align:left">修改示例：'+esc(r.bulletsChanged[0].to.slice(0,30))+'</div>';
+    if(el) el.innerHTML = html;
+    toast(r.summary || '没有差异');
+  }catch(e){ toast('对比失败：'+e.message); }
+}
+async function deleteVariant(id){
+  if(!confirm('删除这个版本？（不影响通用底版）')) return;
+  try{
+    await api('/api/variants/'+id, {method:'DELETE'});
+    await api('/api/variants/activate', {method:'POST', body:JSON.stringify({id:'base'})});
+    var b = await api('/api/bootstrap'); S.profile=b.profile; S.lint=b.lint; S.ats=b.ats; S.completeness=b.completeness;
+    renderHome(); renderProfile(); renderAts(); renderPaper(); await loadVariants(); toast('版本已删除');
+  }catch(e){ toast('删除失败：'+e.message); }
+}
+
+/* JD 分析 */
+async function analyzeJD(){
+  var jd=document.getElementById('jdText').value.trim();
+  if(!jd){ toast('先贴一段 JD'); return; }
+  document.getElementById('btnAnalyze').disabled=true;
+  document.getElementById('jdHint').textContent='分析中…';
+  try{
+    var m = await api('/api/jd',{method:'POST',body:JSON.stringify({jd:jd})});
+    S.jd=m; S.jdText=jd;
+    renderJD(m);
+    await renderSuggestions(m);
+    document.getElementById('jdHint').textContent='';
+  }catch(e){ toast('分析失败：'+e.message); document.getElementById('jdHint').textContent=''; }
+  document.getElementById('btnAnalyze').disabled=false;
+}
+function renderJD(m){
+  var box=document.getElementById('jdResult');
+  if(!m){ box.innerHTML=''; return; }
+  var hit=(m.keywords&&m.keywords.hit)||[], miss=(m.keywords&&m.keywords.missing)||[];
+  box.innerHTML =
+    '<div class="match-ring"><div class="ring" style="--p:'+m.score+'"><b>'+m.score+'</b><small>%</small></div>'+
+    '<div><div style="font-size:12px;color:var(--muted)">'+esc(m.level)+' · 关键词 '+(m.keywords?m.keywords.covered+'/'+m.keywords.total:'—')+'</div>'+
+    '<div style="font-size:11.5px;margin-top:4px">匹配：'+(hit.slice(0,3).map(function(x){return esc(x.word)}).join('、')||'—')+'</div>'+
+    '<div style="font-size:11.5px;color:var(--accent)">缺口：'+(miss.slice(0,4).map(function(x){return esc(x.word)}).join('、')||'无')+'</div></div></div>'+
+    '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">'+hit.map(function(x){return '<span class="chip green">'+esc(x.word)+'</span>'}).join('')+miss.map(function(x){return '<span class="chip red">'+esc(x.word)+'</span>'}).join('')+'</div>'+
+    '<div class="note">'+(m.advice||[]).slice(0,2).map(esc).join('<br>')+'</div>'+
+    '<div class="meta" style="letter-spacing:.16em;margin:12px 0 8px">逐条改写（可一键采用）</div>'+
+    '<div id="suggestList"><div class="meta">正在生成改写…</div></div>';
+}
+async function renderSuggestions(m){
+  var list=document.getElementById('suggestList'); if(!list) return;
+  var lint=S.lint||{};
+  var bids=((lint.top3||[]).concat(lint.issues||[])).map(function(i){return i.bulletId;}).filter(Boolean);
+  bids = bids.filter(function(v,i){return bids.indexOf(v)===i;}).slice(0,3);
+  if(!bids.length){ list.innerHTML='<div class="meta">没有可改的 bullet。先补经历。</div>'; return; }
+  var words=((m.keywords&&m.keywords.missing)||[]).map(function(x){return x.word;});
+  var cards=[];
+  for(var k=0;k<bids.length;k++){
+    var bid=bids[k];
+    var found=findBullet(bid);
+    if(!found) continue;
+    var r=await api('/api/rewrite',{method:'POST',body:JSON.stringify({text:found.b.text, evidence:found.b.evidence||'', jdWords:words})});
+    var vs=r.versions||[];
+    cards.push({bid:bid, orig:found.b.text, versions:vs});
+  }
+  list.innerHTML = cards.map(function(c,ci){
+    return '<div class="suggest" data-ci="'+ci+'">'+
+      '<div class="orig">原文：'+esc(c.orig)+'</div>'+
+      '<div class="new" data-role="new">'+esc((c.versions[0]||{}).text||'')+'</div>'+
+      '<div class="why" data-role="why">'+esc((c.versions[0]||{}).why||'')+'</div>'+
+      '<div class="acts">'+
+        c.versions.map(function(v,vi){return '<button class="btn sm '+(vi===0?'':'ghost')+'" onclick="pickVersion('+ci+','+vi+')">'+v.version+' 版</button>';}).join('')+
+        '<button class="btn sm accent" onclick="adoptSuggestion('+ci+')">采用这版</button>'+
+      '</div></div>';
+  }).join('');
+  window._sugg = cards;
+}
+function findBullet(bid){
+  var parts=bid.split('.'); var sect=parts[0], i=+parts[1], j=+parts[2];
+  var item=(S.profile[sect]||[])[i]; if(!item) return null;
+  var b=(item.bullets||[])[j]; if(!b) return null;
+  return {b:b, item:item, sect:sect, i:i, j:j};
+}
+function pickVersion(ci,vi){
+  var card=window._sugg[ci]; var v=card.versions[vi];
+  var el=document.querySelector('.suggest[data-ci="'+ci+'"]');
+  el.querySelector('[data-role="new"]').textContent=v.text;
+  el.querySelector('[data-role="why"]').textContent=v.why;
+  el.dataset.vi=vi;
+  el.querySelectorAll('.acts .btn').forEach(function(b,idx){ if(idx<card.versions.length){ b.className='btn sm '+(idx===vi?'':'ghost'); } });
+}
+async function adoptSuggestion(ci){
+  var card=window._sugg[ci];
+  var el=document.querySelector('.suggest[data-ci="'+ci+'"]');
+  var vi=+(el.dataset.vi||0);
+  var text=card.versions[vi].text;
+  try{
+    var r=await api('/api/bullet',{method:'POST',body:JSON.stringify({bid:card.bid, text:text})});
+    if(!r.ok){ toast(r.error||'保存失败'); return; }
+    S.profile=r.profile; S.lint=r.lint; if(r.ats) S.ats=r.ats;
+    el.querySelector('[data-role="new"]').textContent='已采用：'+text;
+    el.querySelector('[data-role="why"]').textContent='已写入档案，诊断已刷新。';
+    renderProfile(); renderPaper(); renderHome();
+    toast('已采用，诊断已更新');
+  }catch(e){ toast('保存失败：'+e.message); }
+}
+
+/* ==================== 数字人 ==================== */
+var cv=document.getElementById('avatar'), ctx=cv.getContext('2d');
+var state='idle', mouthOpen=0, t0=performance.now(), blinkAt=0;
+var stateLabels={idle:'待机中',listening:'在听你说',thinking:'正在想怎么追问',speaking:'面试官在说话',feedback:'在给你反馈'};
+/* ==================== 语音（TTS + 录音） ==================== */
+var TTS_ON = true, player = new Audio(), audioCtx = null, analyser = null, audioSrc = null;
+var usingFallbackTTS = false, ttsCache = {};
+
+function toggleTTS(el){
+  el.classList.toggle('on');
+  TTS_ON = el.classList.contains('on');
+  if(!TTS_ON){ try{ player.pause(); }catch(e){} if('speechSynthesis' in window) speechSynthesis.cancel(); }
+}
+function ensureAnalyser(){
+  if(audioCtx) return;
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+    audioSrc = audioCtx.createMediaElementSource(player);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    audioSrc.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  }catch(e){ analyser = null; }
+}
+function audioLevel(){
+  if(!analyser) return 0;
+  var buf = new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(buf);
+  var sum = 0;
+  for(var i=0;i<buf.length;i++){ var v=(buf[i]-128)/128; sum += v*v; }
+  return Math.sqrt(sum/buf.length);
+}
+async function speak(text){
+  if(!TTS_ON || !text) return;
+  usingFallbackTTS = false;
+  setAvatar('speaking');
+  try{
+    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    var url = ttsCache[text];
+    if(!url){
+      var r = await api('/api/tts',{method:'POST',body:JSON.stringify({text:text})});
+      if(!r.ok) throw new Error(r.error||'tts failed');
+      url = r.url; ttsCache[text] = url;
+    }
+    ensureAnalyser();
+    player.src = url;
+    await player.play();
+    player.onended = function(){ setAvatar('listening'); };
+  }catch(e){
+    usingFallbackTTS = true;
+    if('speechSynthesis' in window){
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN'; u.rate = 1.02; u.pitch = 1.0;
+      u.onstart = function(){ setAvatar('speaking'); };
+      u.onend = function(){ setAvatar('listening'); };
+      speechSynthesis.speak(u);
+    }else{
+      setAvatar('listening');
+    }
+  }
+}
+
+async function blobToWav16k(blob){
+  var ab = await blob.arrayBuffer();
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var actx = new AC();
+  var audio = await actx.decodeAudioData(ab);
+  var rate = 16000;
+  var frames = Math.max(1, Math.ceil(audio.duration * rate));
+  var Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  var off = new Offline(1, frames, rate);
+  var src = off.createBufferSource();
+  src.buffer = audio; src.connect(off.destination); src.start(0);
+  var rendered = await off.startRendering();
+  try{ actx.close(); }catch(e){}
+  var ch = rendered.getChannelData(0);
+  var buf = new ArrayBuffer(44 + ch.length * 2);
+  var view = new DataView(buf);
+  function ws(off, str){ for(var i=0;i<str.length;i++) view.setUint8(off+i, str.charCodeAt(i)); }
+  ws(0,'RIFF'); view.setUint32(4, 36 + ch.length*2, true); ws(8,'WAVE'); ws(12,'fmt ');
+  view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true);
+  view.setUint32(24,rate,true); view.setUint32(28,rate*2,true); view.setUint16(32,2,true); view.setUint16(34,16,true);
+  ws(36,'data'); view.setUint32(40, ch.length*2, true);
+  for(var i=0;i<ch.length;i++){
+    var sm = Math.max(-1, Math.min(1, ch[i]));
+    view.setInt16(44 + i*2, sm < 0 ? sm * 0x8000 : sm * 0x7fff, true);
+  }
+  return new Blob([view], {type:'audio/wav'});
+}
+
+var recognition = null, mediaRec = null, mediaChunks = [], recStream = null;
+function toggleRec(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var btn = document.getElementById('recBtn');
+  if(SR){
+    if(recognition){ try{ recognition.stop(); }catch(e){} recognition = null; btn.textContent='🎙 录音'; return; }
+    try{
+      recognition = new SR();
+      recognition.lang = 'zh-CN';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.onresult = function(e){
+        var txt = '';
+        for(var i=e.resultIndex;i<e.results.length;i++){ txt += e.results[i][0].transcript; }
+        document.getElementById('answerInput').value = txt;
+      };
+      recognition.onerror = function(ev){ toast('语音识别不可用（'+ev.error+'），请文字输入'); recognition=null; btn.textContent='🎙 录音'; };
+      recognition.onend = function(){ recognition = null; btn.textContent='🎙 录音'; };
+      recognition.start();
+      btn.textContent = '■ 停止';
+      toast('请说话，识别结果会写进输入框');
+    }catch(e){ toast('语音识别启动失败：'+e.message); }
+    return;
+  }
+  if(mediaRec && mediaRec.state === 'recording'){ mediaRec.stop(); return; }
+  if(!navigator.mediaDevices){ toast('浏览器不支持录音'); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    recStream = stream; mediaChunks = [];
+    mediaRec = new MediaRecorder(stream);
+    mediaRec.ondataavailable = function(e){ if(e.data.size) mediaChunks.push(e.data); };
+    mediaRec.onstop = async function(){
+      recStream.getTracks().forEach(function(t){ t.stop(); });
+      btn.textContent = '识别中…';
+      try{
+        var wav = await blobToWav16k(new Blob(mediaChunks, {type: mediaRec.mimeType || 'audio/webm'}));
+        var fd = new FormData();
+        fd.append('file', wav, 'answer.wav');
+        var r = await (await fetch('/api/stt', {method:'POST', body:fd})).json();
+        if(r.ok && r.text){
+          document.getElementById('answerInput').value = r.text;
+          toast('识别完成：'+Math.round(r.duration)+'s · '+r.model+' 模型');
+        }else{
+          toast('转写失败：'+(r.error||'未知错误')+'（可文字输入）');
+        }
+      }catch(e){ toast('转写失败：'+e.message+'（可文字输入）'); }
+      btn.textContent = '🎙 录音';
+    };
+    mediaRec.start();
+    btn.textContent = '■ 停止';
+    toast('录音中…再点一次停止');
+  }).catch(function(){ toast('麦克风不可用或未授权'); });
+}
+
+function setAvatar(s){ state=s; var el=document.getElementById('avatarState'); if(el) el.textContent=stateLabels[s]||s; }
+function drawAvatar(now){
+  var t=(now-t0)/1000, w=cv.width,h=cv.height,cx=w/2, cy=h/2+8;
+  ctx.clearRect(0,0,w,h);
+  var bob = Math.sin(t*1.6)*4; if(state==='listening') bob=Math.sin(t*2.2)*5; if(state==='thinking') bob=-4+Math.sin(t*1.1)*2; if(state==='feedback') bob=Math.sin(t*5)*6;
+  cy+=bob;
+  ctx.save(); ctx.strokeStyle='#1d1b17'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.ellipse(cx,cy,108,124,0,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx-110,cy+10,15,Math.PI*.5,Math.PI*1.5); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx+110,cy+10,15,Math.PI*1.5,Math.PI*.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-106,cy-58); ctx.quadraticCurveTo(cx-70,cy-150,cx,cy-128); ctx.quadraticCurveTo(cx+70,cy-150,cx+106,cy-58); ctx.stroke();
+  var browY=cy-34+(state==='thinking'?-7:0);
+  ctx.beginPath(); ctx.moveTo(cx-64,browY); ctx.quadraticCurveTo(cx-42,browY-8,cx-20,browY+1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+20,browY+1); ctx.quadraticCurveTo(cx+42,browY-8,cx+64,browY); ctx.stroke();
+  var blink=(now-blinkAt<130)||(state==='thinking'&&Math.sin(t*2)>.7);
+  if(blink){ ctx.beginPath(); ctx.moveTo(cx-58,cy-8); ctx.lineTo(cx-26,cy-8); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+26,cy-8); ctx.lineTo(cx+58,cy-8); ctx.stroke(); }
+  else{ ctx.fillStyle='#1d1b17'; ctx.beginPath(); ctx.arc(cx-42,cy-8,8,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+42,cy-8,8,0,Math.PI*2); ctx.fill(); }
+  ctx.beginPath(); ctx.moveTo(cx,cy+2); ctx.quadraticCurveTo(cx+5,cy+14,cx-2,cy+18); ctx.stroke();
+  if(mouthOpen<.25){ ctx.beginPath(); ctx.arc(cx,cy+40,22,.15*Math.PI,.85*Math.PI); ctx.stroke(); }
+  else if(mouthOpen<.62){ ctx.beginPath(); ctx.ellipse(cx,cy+46,20,10,0,0,Math.PI*2); ctx.stroke(); }
+  else{ ctx.beginPath(); ctx.ellipse(cx,cy+48,22,17,0,0,Math.PI*2); ctx.fillStyle='#1d1b17'; ctx.fill(); }
+  if(state==='speaking'||state==='feedback'){ ctx.fillStyle='rgba(178,58,44,.12)'; ctx.beginPath(); ctx.arc(cx-78,cy+32,18,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+78,cy+32,18,0,Math.PI*2); ctx.fill(); }
+  if(state==='thinking'){ ctx.strokeStyle='#7a7367'; ctx.lineWidth=3; for(var i=0;i<3;i++){ ctx.beginPath(); ctx.arc(cx+120+i*16,cy-96-i*10,4+i*2,0,Math.PI*2); ctx.stroke(); } }
+  if(state==='speaking'){
+    var lv = audioLevel();
+    mouthOpen = usingFallbackTTS ? (.5+.5*Math.sin(t*11)) : Math.min(1, lv*6.5);
+  }
+  else if(state==='feedback') mouthOpen=.18+.12*Math.sin(t*4);
+  else mouthOpen=0;
+  if(now-blinkAt>2800+Math.random()*2200) blinkAt=now;
+  ctx.restore();
+  requestAnimationFrame(drawAvatar);
+}
+requestAnimationFrame(drawAvatar);
+
+/* ==================== 面试陪练 ==================== */
+var roundsWanted=5;
+document.querySelectorAll('#roundRow .btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    roundsWanted=+b.dataset.r;
+    document.querySelectorAll('#roundRow .btn').forEach(function(x){x.className='btn sm ghost';});
+    b.className='btn sm'; b.style.background='var(--ink)'; b.style.color='var(--paper)'; b.style.borderColor='var(--ink)';
+  });
+});
+function renderPracticeBasis(){
+  var p=S.profile||{};
+  var bullets=[];
+  (p.internships||[]).forEach(function(x){bullets.push(x.org)});
+  (p.projects||[]).forEach(function(x){bullets.push(x.name)});
+  document.getElementById('practiceBasis').innerHTML =
+    '<dt>简历</dt><dd>'+esc(bullets.slice(0,3).join(' / ')||'—')+'</dd>'+
+    '<dt>出题依据</dt><dd>数字口径 / 角色边界 / 失败复盘 / JD 缺口</dd>'+
+    '<dt>评分维度</dt><dd>具体 · 可核查 · 角色边界 · 结果</dd>';
+}
+async function startInterview(){
+  var role=document.getElementById('roleInput').value.trim();
+  var jd=document.getElementById('practiceJD').value.trim();
+  go('interview');
+  document.getElementById('setupPanel').style.display='none';
+  document.getElementById('stagePanel').classList.add('show');
+  document.getElementById('chat').innerHTML='';
+  document.getElementById('stageRound').textContent='准备中…';
+  setAvatar('thinking');
+  try{
+    var r=await api('/api/practice/start',{method:'POST',body:JSON.stringify({role:role, jd:jd, rounds:roundsWanted, mode:'text', persona:'senior'})});
+    S.sid=r.sid; S.total=r.total; S.index=r.index;
+    document.getElementById('stageMeta').textContent = r.role + ' · ' + (r.source==='llm'?'LLM 面试官':'规则面试官');
+    if(r.source==='llm') toast('已用 LLM 生成题目');
+    if(r.llmError) toast(r.llmError);
+    document.getElementById('stageRound').textContent='第 1 轮 / 共 '+r.total+' 轮';
+    renderDots(0,r.total);
+    askQuestion(r.question, r.index, r.total);
+  }catch(e){ toast('开始失败：'+e.message); }
+}
+function renderDots(idx,total){
+  var d=''; for(var i=0;i<total;i++) d+='<i class="'+(i<=idx?'on':'')+'"></i>';
+  document.getElementById('dots').innerHTML=d;
+}
+function addMsg(text,who,extra){
+  var d=document.createElement('div');
+  d.className='msg '+(who==='ai'?'ai':'me');
+  d.innerHTML='<div class="who">'+(who==='ai'?'面试官':'你')+'</div><div>'+text+'</div>'+(extra?'<div class="quote">'+extra+'</div>':'');
+  document.getElementById('chat').appendChild(d);
+  d.scrollIntoView({behavior:'smooth',block:'nearest'});
+  return d;
+}
+function askQuestion(q, idx, total){
+  setAvatar('speaking');
+  addMsg('<span class="typing"><i></i><i></i><i></i></span>','ai');
+  setTimeout(function(){
+    var last=document.getElementById('chat').lastChild; if(last) last.remove();
+    addMsg(esc(q.q),'ai',(q.kind||'')+(q.point?' · '+esc(q.point):''));
+    setAvatar('listening');
+    if(TTS_ON) speak(q.q);
+    document.getElementById('stageRound').textContent='第 '+(idx+1)+' 轮 / 共 '+total+' 轮';
+    renderDots(idx,total);
+    document.getElementById('answerInput').focus();
+  }, 900);
+}
+function fillAnswer(t){ document.getElementById('answerInput').value=t; }
+async function sendAnswer(){
+  var input=document.getElementById('answerInput');
+  var v=input.value.trim();
+  if(!v){ toast('先写一句回答'); return; }
+  addMsg(esc(v),'me'); input.value='';
+  setAvatar('thinking');
+  try{
+    var r=await api('/api/practice/answer',{method:'POST',body:JSON.stringify({sid:S.sid, answer:v})});
+    if(r.feedback){
+      var fb=r.feedback;
+      addMsg('本题得分 '+fb.score+'/10 · '+fb.grade+'<div class="feedback">'+esc(fb.fix||'')+'</div>','ai');
+    }
+    if(r.done){
+      S.report=r.report; setAvatar('feedback');
+      setTimeout(function(){ renderReport(r.report,{role:document.getElementById('roleInput').value, mode:'text', persona:'senior', createdAt:new Date().toLocaleString('zh-CN')}); go('report'); toast('报告已生成，总评 '+r.report.total+' 分'); }, 800);
+    }else{
+      S.index=r.index; S.total=r.total;
+      setTimeout(function(){ askQuestion(r.question, r.index, r.total); }, 700);
+    }
+  }catch(e){ toast('提交失败：'+e.message); }
+}
+async function finishInterview(){
+  if(!S.sid){ toast('还没有开始的练习'); return; }
+  try{
+    var r=await api('/api/practice/finish',{method:'POST',body:JSON.stringify({sid:S.sid})});
+    S.report=r.report;
+    renderReport(r.report,{role:'练习', mode:'text', persona:'senior', createdAt:new Date().toLocaleString('zh-CN')});
+    go('report');
+  }catch(e){ toast('结束失败：'+e.message); }
+}
+
+/* ==================== 复盘 ==================== */
+function renderReport(rep, session){
+  if(!rep){ return; }
+  S.report=rep;
+  document.getElementById('reportMeta').textContent = (session&&session.role?session.role:'练习')+' · '+(session&&session.mode==='voice'?'语音':'文字')+' · '+(session&&session.createdAt?session.createdAt:'')+' · 已答 '+rep.stats.answered+' 题';
+  var dimMap={spec:'具体',quant:'可核查',own:'角色边界',result:'结果'};
+  var head='<div class="score-head">'+
+    '<div class="card pad"><div class="cap">总评</div><div class="num" style="font-family:var(--serif);font-size:30px">'+rep.total+'</div><div class="bar accent" style="margin-top:8px"><i style="width:'+rep.total+'%"></i></div></div>'+
+    rep.dims.map(function(d){return '<div class="card pad"><div class="cap">'+esc(d.label)+'</div><div class="num" style="font-family:var(--serif);font-size:30px">'+d.score+'</div><div class="bar"><i style="width:'+d.score+'%"></i></div></div>';}).join('')+
+    '</div><div class="note" style="margin-bottom:12px">'+esc(rep.disclaimer||'')+'</div>';
+  var qs = rep.questions.map(function(q,i){
+    var dims=(q.dims||[]).map(function(d){return '<div class="dim"><span>'+esc(dimMap[d.key]||d.label||'')+'</span><div class="bar"><i style="width:'+(d.score/25*100)+'%"></i></div><span>'+(d.score)+'</span></div>';}).join('');
+    return '<div class="qcard'+(i===0?' open':'')+'"><div class="qcard-h" onclick="this.parentNode.classList.toggle(\'open\')"><div class="q">Q'+(i+1)+'. '+esc(q.q)+'<div class="meta" style="margin-top:4px">'+esc(q.kind||'')+'</div></div><div class="sc">'+q.score+'<span style="font-size:12px;color:var(--muted)">/10</span></div></div>'+
+      '<div class="qcard-b"><div class="meta" style="letter-spacing:.16em;margin-bottom:6px">你的回答</div><div style="font-size:12.5px">'+esc(q.answer||'')+'</div>'+dims+
+      '<div class="ans-block"><div class="t">改进建议</div>'+esc(q.fix||'')+'</div>'+
+      (q.frame?'<div class="ans-block"><div class="t">回答框架</div>'+esc(q.frame)+'</div>':'')+
+      (q.trap?'<div class="ans-block"><div class="t">常见坑</div>'+esc(q.trap)+'</div>':'')+
+      '</div></div>';
+  }).join('');
+  document.getElementById('reportBody').innerHTML = head+'<div class="qcard" style="margin-bottom:10px"><div class="qcard-h"><div class="q">弱项汇总</div></div></div>'+(qs||'<div class="empty">没有答题记录。</div>');
+  renderMistakes();
+  renderReportHistory();
+}
+
+function renderReportHistory(){
+  var box = document.getElementById('reportHistory');
+  if(!box) return;
+  var ss = S.sessions || [];
+  if(!ss.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<span class="meta">历史练习：</span>' + ss.map(function(x){
+    var label = (x.role||'练习').slice(0,14) + ' · ' + (x.total!=null ? x.total+' 分' : '未完成');
+    return '<a style="margin:0 8px;color:var(--green);cursor:pointer" onclick="loadHistory(\''+x.id+'\')">'+esc(label)+'</a>';
+  }).join('') + '<a style="margin-left:8px;color:var(--muted);cursor:pointer" onclick="refreshSessions()">刷新</a>';
+}
+async function refreshSessions(){
+  try{
+    var r = await api('/api/sessions');
+    S.sessions = r.sessions || [];
+    renderReportHistory();
+    toast('已刷新练习记录');
+  }catch(e){ toast('刷新失败：'+e.message); }
+}
+async function loadHistory(id){
+  try{
+    var r = await api('/api/sessions/'+id);
+    if(r.ok && r.report){ renderReport(r.report, r.session); toast('已加载历史报告'); }
+    else { toast('这场还没生成报告'); }
+  }catch(e){ toast('加载失败：'+e.message); }
+}
+
+/* ==================== 错题本 ==================== */
+function renderMistakes(){
+  var rep=S.report;
+  var weak=(rep&&rep.weakPoints)||[];
+  document.getElementById('mistakeList').innerHTML = weak.length? weak.map(function(w){
+    return '<div class="issue"><div class="tag">'+(w.kind||'')+' · '+w.score+'/10</div>'+esc(w.q)+'<div class="fix">'+esc(w.fix||'')+'</div></div>';
+  }).join('') : '<div class="meta">还没有弱项记录。先完成一场练习。</div>';
+  var l=S.lint||{};
+  document.getElementById('mistakeIssues').innerHTML = (l.top3||[]).map(function(i){
+    return '<div class="issue"><div class="tag">'+esc(i.rule||'')+'</div>'+esc((i.problem||'').slice(0,70))+'<div class="fix">'+esc(i.fix||'')+'</div></div>';
+  }).join('') || '<div class="meta">暂无。</div>';
+  renderTrainingPlan();
+}
+
+function renderTrainingPlan(){
+  var el = document.getElementById('trainingPlan');
+  if(!el) return;
+  var weak = (S.report && S.report.weakPoints) || [];
+  var l = S.lint || {};
+  var tasks = [];
+  if(weak.length) tasks.push({t:'重练 '+weak.length+' 道低分题', d:'先看「改进建议」，答完再对比分数'});
+  if((l.top3||[]).length) tasks.push({t:'改掉诊断 Top'+(l.top3.length)+'：'+l.top3.map(function(i){return i.rule}).join('、'), d:'去简历页采用改写建议'});
+  tasks.push({t:'完整跑一场 5 轮面试', d:'至少 2 道题用语音作答'});
+  tasks.push({t:'导出 PDF 并回读 ATS', d:'确认文字层与版面没问题再投'});
+  el.innerHTML = tasks.map(function(x, i){
+    return '<div class="task" onclick="this.classList.toggle(\'done\')"><div class="box">✓</div><div><div class="t">Day '+(i+1)+' · '+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div></div>';
+  }).join('');
+}
+
+/* ==================== 投递台账 ==================== */
+var APP_STAGES=['已投','面试中','二面','Offer','已终止'];
+function renderApps(){
+  var apps=S.apps||[];
+  var stages={}; apps.forEach(function(a){stages[a.stage]=(stages[a.stage]||0)+1;});
+  document.getElementById('appStats').innerHTML =
+    stat('总投递', apps.length, '条', '本地记录') +
+    stat('面试中', (stages['面试中']||0)+(stages['二面']||0), '个', '状态可改') +
+    stat('Offer', stages['Offer']||0, '个', '') +
+    stat('已终止', stages['已终止']||0, '个', '');
+  if(!apps.length){ document.getElementById('appTable').innerHTML='<div class="empty">还没有投递记录。点右上角「＋ 记录一次投递」。</div>'; return; }
+  document.getElementById('appTable').innerHTML='<table class="table"><tr><th>公司 · 岗位</th><th>阶段</th><th>备注</th><th>日期</th><th></th></tr>'+
+    apps.map(function(a){
+      var opts = APP_STAGES.map(function(st){ return '<option ' + (a.stage===st?'selected':'') + '>'+st+'</option>'; }).join('');
+      return '<tr><td><b>'+esc(a.company)+'</b> · '+esc(a.role)+'</td>'+
+        '<td><select class="jd-input" style="min-height:auto;height:30px;width:96px" onchange="updateApp('+a.id+', this.value)">'+opts+'</select></td>'+
+        '<td>'+esc(a.note||'')+'</td><td>'+esc(a.created_at||'')+'</td>'+
+        '<td><button class="btn sm ghost" onclick="deleteApp('+a.id+')">删除</button></td></tr>';
+    }).join('')+'</table>';
+}
+async function updateApp(id, stage){
+  try{ var r=await api('/api/apps/'+id,{method:'PATCH',body:JSON.stringify({stage:stage})}); S.apps=r.apps; renderApps(); renderHome(); toast('状态已更新为 '+stage); }catch(e){ toast('更新失败：'+e.message); }
+}
+async function deleteApp(id){
+  if(!confirm('删除这条投递记录？')) return;
+  try{ var r=await api('/api/apps/'+id,{method:'DELETE'}); S.apps=r.apps; renderApps(); renderHome(); toast('已删除'); }catch(e){ toast('删除失败：'+e.message); }
+}
+async function addApp(){
+  var company=prompt('公司名：'); if(!company) return;
+  var role=prompt('岗位：')||'实习';
+  var stage=prompt('阶段（已投/面试中/二面/Offer/已终止）：')||'已投';
+  try{ var r=await api('/api/apps',{method:'POST',body:JSON.stringify({company:company, role:role, stage:stage})}); S.apps=r.apps; renderApps(); renderHome(); toast('已记录'); }catch(e){ toast('失败：'+e.message); }
+}
+
+/* ==================== 设置 ==================== */
+async function deleteAllData(){
+  var v = prompt('这会清空全部档案 / 练习 / 投递，并恢复示例档案。输入 DELETE 确认：');
+  if(v !== 'DELETE'){ toast('已取消'); return; }
+  try{
+    var r = await api('/api/data/reset', {method:'POST', body:JSON.stringify({confirm:'DELETE'})});
+    if(r.ok){ toast('已重置，正在刷新…'); setTimeout(function(){ location.reload(); }, 700); }
+    else toast(r.error || '重置失败');
+  }catch(e){ toast('重置失败：'+e.message); }
+}
+
+async function loadLLM(){
+  try{
+    var c = await api('/api/llm/config');
+    window._llm = c;
+    var sel = document.getElementById('llmProvider');
+    if(sel) sel.value = c.provider || 'deepseek';
+    if(document.getElementById('llmBase')) document.getElementById('llmBase').value = c.base_url || '';
+    if(document.getElementById('llmModel')) document.getElementById('llmModel').value = c.model || '';
+    if(document.getElementById('llmStatus')) document.getElementById('llmStatus').textContent = c.configured ? ('已配置 · 尾号 ' + c.key_tail) : '未配置（规则引擎）';
+  }catch(e){}
+}
+function llmPreset(provider){
+  var p = window._llm && window._llm.presets ? window._llm.presets[provider] : null;
+  if(p){
+    document.getElementById('llmBase').value = p.base_url || '';
+    document.getElementById('llmModel').value = p.model || '';
+  }
+}
+async function saveLLM(){
+  var body = {
+    provider: document.getElementById('llmProvider').value,
+    base_url: document.getElementById('llmBase').value,
+    model: document.getElementById('llmModel').value,
+    api_key: document.getElementById('llmKey').value
+  };
+  try{
+    var r = await api('/api/llm/config', {method:'POST', body:JSON.stringify(body)});
+    document.getElementById('llmKey').value = '';
+    window._llm = r.config;
+    document.getElementById('llmStatus').textContent = r.config.configured ? ('已配置 · 尾号 ' + r.config.key_tail) : '未配置（规则引擎）';
+    toast(r.config.configured ? '已保存，下一场练习用 LLM 出题' : '已保存（还没有 Key）');
+  }catch(e){ toast('保存失败：'+e.message); }
+}
+async function testLLM(){
+  toast('正在测试连通…');
+  try{
+    var r = await api('/api/llm/test', {method:'POST', body:'{}'});
+    toast(r.ok ? ('连通 OK · ' + r.latency + 's · 回复 ' + r.reply) : ('失败：' + r.error));
+  }catch(e){ toast('测试失败：'+e.message); }
+}
+async function clearLLM(){
+  try{
+    var r = await api('/api/llm/config', {method:'POST', body:JSON.stringify({
+      provider: document.getElementById('llmProvider').value,
+      base_url: document.getElementById('llmBase').value,
+      model: document.getElementById('llmModel').value,
+      api_key: '__clear__'
+    })});
+    window._llm = r.config;
+    document.getElementById('llmStatus').textContent = '未配置（规则引擎）';
+    toast('已清除 Key');
+  }catch(e){ toast('清除失败：'+e.message); }
+}
+
+async function renderSettings(){
+  try{
+    var h=await api('/api/health');
+    document.getElementById('runtimeKv').innerHTML='<dt>服务</dt><dd>'+esc(h.service)+' '+esc(h.version)+'</dd><dt>Python</dt><dd>'+esc(h.runtime)+'</dd><dt>数据</dt><dd>app/data/zhilian.db（SQLite）</dd><dt>模式</dt><dd>规则引擎 + LLM（可选）</dd>';
+  }catch(e){ document.getElementById('runtimeKv').innerHTML='<dt>服务</dt><dd>未连接</dd>'; }
+  var p=S.profile; document.getElementById('acctName').textContent=(p&&p.basic&&p.basic.name?p.basic.name:'本地')+' · 单用户';
+  if(p) renderPracticeBasis();
+}
+
+/* 启动 + 直达视图（#resume / #report / #run-interview 方便验收与演示） */
+(function(){
+  var h=(location.hash||'').replace('#','');
+  if(!h) return;
+  document.body.classList.add('no-anim');
+  if(h==='run-interview'){ setTimeout(function(){ startInterview(); }, 900); }
+  else if(h==='ats-render'){ setTimeout(function(){ go('resume'); atsRender(); }, 600); }
+  else { go(h); }
+})();
+boot();
+</script>
+</body>
+</html>

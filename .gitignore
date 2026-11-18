@@ -19,6 +19,8 @@ diag/
 pack/
 storage_tmp/
 
-data/*.db*
+app/data/*.db*
+data/
 *.wav
 *.mp3
+app/data/exports/

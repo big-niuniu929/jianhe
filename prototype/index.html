@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>职练 · 可点原型 v0.1</title>
+<style>
+/* ============ 设计 token ============ */
+:root{
+  --paper:#f7f3ea; --paper-2:#fffdf8; --desk:#e9e3d5;
+  --ink:#1d1b17; --ink-2:#4a453c; --muted:#7a7367;
+  --line:#d7cfbe; --line-2:#e8e1d2;
+  --accent:#b23a2c; --accent-soft:#f3ded8;
+  --green:#2e6b63; --green-soft:#dfeae6;
+  --gold:#9a7b34; --gold-soft:#f1e8d2;
+  --radius:2px;
+  --shadow:0 1px 0 rgba(29,27,23,.04), 0 8px 24px -18px rgba(29,27,23,.45);
+  --serif:"Songti SC","Source Han Serif SC","Noto Serif SC",Georgia,"Times New Roman",serif;
+  --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--desk); color:var(--ink); font-family:var(--sans);
+  font-size:14px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
+input,textarea,select{font:inherit;color:inherit}
+::selection{background:var(--accent-soft)}
+
+/* ============ 布局 ============ */
+.app{max-width:1440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.topbar{display:flex;align-items:center;gap:22px;padding:14px 26px;border-bottom:1px solid var(--line);background:var(--paper-2);position:sticky;top:0;z-index:30}
+.brand{display:flex;align-items:center;gap:10px;min-width:190px}
+.logo{width:34px;height:34px;display:grid;place-items:center;background:var(--ink);color:var(--paper);font-family:var(--serif);font-size:19px;border-radius:var(--radius)}
+.brand strong{display:block;font-size:17px;letter-spacing:.12em;font-family:var(--serif)}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:.14em}
+.tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{padding:8px 13px;color:var(--ink-2);font-size:13px;white-space:nowrap;border-bottom:2px solid transparent;letter-spacing:.04em}
+.tabs button:hover{color:var(--ink)}
+.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.acct{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.main{flex:1;padding:26px;overflow:auto}
+.view{display:none;animation:fade .28s ease}
+body.no-anim .view{animation:none}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ============ 通用组件 ============ */
+.h1{font-family:var(--serif);font-size:30px;line-height:1.25;margin:0 0 6px;letter-spacing:.02em}
+.h2{font-family:var(--serif);font-size:20px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.h2 .no{font-size:11px;color:var(--accent);font-family:var(--sans);letter-spacing:.18em;border:1px solid var(--accent);padding:1px 6px}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:18px 20px}
+.row{display:flex;gap:14px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;color:var(--ink-2);background:var(--paper-2)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chip.green{background:var(--green-soft);border-color:#bcd6cf;color:var(--green)}
+.chip.red{background:var(--accent-soft);border-color:#e5bdb3;color:var(--accent)}
+.chip.gold{background:var(--gold-soft);border-color:#e2d3ae;color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-size:13px;letter-spacing:.05em;border-radius:var(--radius);transition:.18s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px -10px rgba(0,0,0,.55)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.accent{background:var(--accent);border-color:var(--accent)}
+.btn.sm{padding:5px 11px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.meta{font-size:11.5px;color:var(--muted);letter-spacing:.06em}
+.divider{height:1px;background:var(--line-2);margin:16px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.bar{height:6px;background:var(--line-2);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--ink);border-radius:999px;transition:width .6s ease}
+.bar.accent>i{background:var(--accent)}
+.bar.green>i{background:var(--green)}
+.note{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:10px}
+.pill{font-size:10.5px;letter-spacing:.12em;color:var(--muted)}
+
+/* ============ 工作台 ============ */
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:6px 2px 22px;flex-wrap:wrap}
+.hero .date{font-size:12px;color:var(--muted);letter-spacing:.2em}
+.hero-actions{display:flex;gap:10px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+.grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}
+.stat .num{font-family:var(--serif);font-size:32px;line-height:1.1}
+.stat .num small{font-size:13px;color:var(--muted);font-family:var(--sans);margin-left:3px}
+.stat .cap{font-size:12px;color:var(--muted);margin-top:2px}
+.task{display:flex;gap:12px;padding:11px 0;border-top:1px dashed var(--line-2)}
+.task:first-of-type{border-top:none}
+.task .box{width:16px;height:16px;border:1px solid var(--line);margin-top:3px;flex:none;display:grid;place-items:center;font-size:11px;color:var(--paper);background:var(--paper-2);cursor:pointer}
+.task.done .box{background:var(--green);border-color:var(--green)}
+.task.done .t{text-decoration:line-through;color:var(--muted)}
+.task .t{font-size:13.5px}
+.task .d{font-size:11.5px;color:var(--muted)}
+.timeline{display:flex;gap:0;margin-top:10px}
+.timeline .step{flex:1;position:relative;padding-top:18px;font-size:11.5px;color:var(--muted);text-align:center}
+.timeline .step::before{content:"";position:absolute;top:5px;left:50%;width:9px;height:9px;border-radius:50%;background:var(--line);transform:translateX(-50%)}
+.timeline .step::after{content:"";position:absolute;top:9px;left:50%;width:100%;height:1px;background:var(--line-2)}
+.timeline .step:last-child::after{display:none}
+.timeline .step.on{color:var(--ink);font-weight:600}
+.timeline .step.on::before{background:var(--accent)}
+
+/* ============ 简历 ============ */
+.resume-grid{display:grid;grid-template-columns:270px minmax(420px,1fr) 360px;gap:16px;align-items:start}
+.paper-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.paper{
+  width:100%;max-width:560px;aspect-ratio:1/1.414;background:#fff;border:1px solid var(--line);
+  box-shadow:0 18px 40px -30px rgba(0,0,0,.6);padding:34px 38px;font-size:10.5px;line-height:1.65;color:#24221e;
+  overflow:hidden;position:relative;
+}
+.paper h1{font-family:var(--serif);font-size:24px;margin:0 0 2px;letter-spacing:.1em}
+.paper .head-row{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid #24221e;padding-bottom:8px;margin-bottom:12px}
+.paper .contact{font-size:9px;color:#5a554b;text-align:right;line-height:1.7}
+.paper .sec{margin-bottom:11px}
+.paper .sec-t{font-size:10.5px;letter-spacing:.22em;color:#b23a2c;border-bottom:1px solid #ddd6c8;padding-bottom:3px;margin-bottom:6px;font-weight:700}
+.paper .item{margin-bottom:7px}
+.paper .item-h{display:flex;justify-content:space-between;font-weight:700;font-size:10.5px}
+.paper .item-s{color:#5a554b;font-size:9.5px}
+.paper ul{margin:3px 0 0;padding-left:14px}
+.paper li{margin-bottom:2px}
+.paper li.changed{background:#f4e3dd;outline:1px solid #e0b6aa;border-radius:2px}
+.paper .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.verbar{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.verbar .v{white-space:nowrap;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;background:var(--paper-2)}
+.verbar .v.active{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.diag-row{display:flex;justify-content:space-between;font-size:12.5px;margin:8px 0 3px}
+.issue{padding:9px 0;border-top:1px dashed var(--line-2);font-size:12.5px}
+.issue .tag{font-size:10px;color:var(--accent);letter-spacing:.1em}
+.issue .fix{color:var(--muted);font-size:11.5px;margin-top:2px}
+.match-ring{display:flex;align-items:center;gap:16px;margin:6px 0 12px}
+.ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p)*1%), var(--line-2) 0);position:relative}
+.ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--paper-2)}
+.ring b{position:relative;font-family:var(--serif);font-size:26px}
+.ring small{position:relative;font-size:10px;color:var(--muted);margin-left:1px}
+.suggest{border:1px solid var(--line);background:var(--paper-2);border-radius:var(--radius);padding:12px;margin-bottom:10px}
+.suggest .orig{color:var(--muted);font-size:11.5px;text-decoration:line-through;margin-bottom:5px}
+.suggest .new{font-size:13px;margin-bottom:6px}
+.suggest .why{font-size:11.5px;color:var(--ink-2)}
+.suggest .why b{color:var(--accent)}
+.suggest .acts{display:flex;gap:8px;margin-top:8px}
+.jd-input{width:100%;min-height:74px;resize:vertical;border:1px solid var(--line);background:#fff;padding:9px 11px;font-size:12.5px;border-radius:var(--radius);outline:none}
+.jd-input:focus{border-color:var(--ink)}
+.jd-pre{font-size:11px;color:var(--muted);margin:8px 0}
+.analysis{display:none;margin-top:12px}
+.analysis.show{display:block}
+
+/* ============ 面试陪练 ============ */
+.interview{max-width:1020px;margin:0 auto}
+.setup{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.opt-row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.stage{display:none;max-width:860px;margin:0 auto}
+.stage.show{display:block}
+.avatar-box{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,#fbf8f1,#f1ece0);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;align-items:center}
+.avatar-box canvas{width:230px;height:230px;display:block}
+.avatar-status{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);letter-spacing:.1em;margin-top:4px}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.chat{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.msg{max-width:82%;padding:11px 14px;border:1px solid var(--line);background:var(--paper-2);border-radius:var(--radius);font-size:13.5px;position:relative}
+.msg.ai{border-left:3px solid var(--accent)}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.msg .who{font-size:10px;letter-spacing:.14em;color:var(--muted);margin-bottom:3px}
+.msg.me .who{color:#c9c2b3}
+.msg .quote{color:var(--accent);font-size:11.5px;margin-top:4px}
+.typing i{display:inline-block;width:4px;height:4px;background:var(--muted);border-radius:50%;margin-right:3px;animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+.answer-box{border:1px solid var(--line);background:var(--paper-2);padding:10px;margin-top:12px}
+.answer-box textarea{width:100%;min-height:58px;border:none;outline:none;background:transparent;resize:vertical;font-size:13.5px}
+.answer-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.rec{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.rec .mic{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:var(--paper-2);font-size:14px}
+.rec.on .mic{background:var(--accent);color:#fff;border-color:var(--accent);animation:pulse 1s infinite}
+.progress-dots{display:flex;gap:6px;justify-content:center;margin:10px 0 2px}
+.progress-dots i{width:26px;height:3px;background:var(--line);display:block}
+.progress-dots i.on{background:var(--accent)}
+
+/* ============ 复盘 / 错题 / 台账 / 设置 ============ */
+.score-head{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0}
+.score .num{font-family:var(--serif);font-size:29px}
+.score .cap{font-size:11.5px;color:var(--muted)}
+.qcard{border:1px solid var(--line);background:var(--paper-2);margin-bottom:10px}
+.qcard-h{display:flex;justify-content:space-between;gap:12px;padding:13px 15px;cursor:pointer;align-items:flex-start}
+.qcard-h .q{font-size:13.5px;max-width:70%}
+.qcard-h .sc{font-family:var(--serif);font-size:19px;white-space:nowrap}
+.qcard-b{display:none;border-top:1px solid var(--line-2);padding:13px 15px;font-size:12.5px}
+.qcard.open .qcard-b{display:block}
+.dim{display:grid;grid-template-columns:64px 1fr 42px;gap:8px;align-items:center;font-size:11.5px;margin:5px 0}
+.badge{font-size:10px;padding:1px 6px;border-radius:999px;letter-spacing:.08em}
+.badge.red{background:var(--accent-soft);color:var(--accent)}
+.badge.green{background:var(--green-soft);color:var(--green)}
+.badge.gold{background:var(--gold-soft);color:var(--gold)}
+.ans-block{background:var(--paper);border:1px dashed var(--line);padding:10px 12px;margin-top:8px;font-size:12.5px}
+.ans-block .t{font-size:10px;letter-spacing:.16em;color:var(--accent);margin-bottom:3px}
+.replay{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11.5px;color:var(--muted)}
+.replay .track{flex:1;height:4px;background:var(--line-2);border-radius:99px;overflow:hidden}
+.replay .track i{display:block;height:100%;width:0;background:var(--green);transition:width .2s linear}
+.table{width:100%;border-collapse:collapse;font-size:12.5px}
+.table th{text-align:left;font-weight:600;color:var(--muted);font-size:11px;letter-spacing:.1em;padding:8px 10px;border-bottom:1px solid var(--line)}
+.table td{padding:11px 10px;border-bottom:1px solid var(--line-2)}
+.table tr:hover td{background:var(--paper-2)}
+.empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+.toggle{width:38px;height:21px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:.2s}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on{background:var(--green)}
+.toggle.on::after{left:19px}
+.setting{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px dashed var(--line-2);align-items:flex-start}
+.setting:first-of-type{border-top:none}
+.setting .t{font-size:13px}
+.setting .d{font-size:11.5px;color:var(--muted);margin-top:2px;max-width:460px}
+
+/* ============ toast / 状态 ============ */
+#toast{position:fixed;left:50%;bottom:98px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:9px 16px;font-size:12.5px;border-radius:var(--radius);opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:80vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.proto-note{font-size:10.5px;color:var(--muted);letter-spacing:.08em;border:1px dashed var(--line);padding:3px 8px;display:inline-block}
+
+/* ============ 移动端 ============ */
+.mobile-tabs{display:none}
+@media (max-width:1100px){
+  .resume-grid{grid-template-columns:1fr 1fr}
+  .resume-grid .col-jd{grid-column:1/-1}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .grid-2{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  .app{border:none}
+  .topbar{padding:10px 14px;gap:10px}
+  .brand small{display:none}
+  .tabs{display:none}
+  .acct{display:none}
+  .main{padding:16px 14px 84px}
+  .h1{font-size:24px}
+  .resume-grid{grid-template-columns:1fr}
+  .resume-grid .col-profile{order:2}
+  .resume-grid .col-paper{order:1}
+  .resume-grid .col-jd{order:3}
+  .paper{padding:22px 22px;font-size:8.6px;line-height:1.6}
+  .paper h1{font-size:17px}
+  .paper .sec-t{font-size:9px}
+  .paper .item-h{font-size:9px}
+  .paper .item-s,.paper .contact{font-size:8px}
+  .grid-4{grid-template-columns:1fr 1fr;gap:10px}
+  .setup{grid-template-columns:1fr}
+  .score-head{grid-template-columns:repeat(2,1fr)}
+  .avatar-box canvas{width:190px;height:190px}
+  .mobile-tabs{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--paper-2);border-top:1px solid var(--line);z-index:40;overflow-x:auto;scrollbar-width:none}
+  .mobile-tabs::-webkit-scrollbar{display:none}
+  .mobile-tabs button{flex:1;min-width:64px;padding:9px 4px 11px;font-size:10.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;border-top:2px solid transparent}
+  .mobile-tabs button .ic{font-size:15px;line-height:1}
+  .mobile-tabs button.active{color:var(--accent);border-top-color:var(--accent)}
+  #toast{bottom:74px}
+}
+@media print{
+  .topbar,.mobile-tabs,.toolbar,.verbar,.col-profile,.col-jd,.hero-actions{display:none!important}
+  body,.app{background:#fff}
+  .main{padding:0}
+  .paper{box-shadow:none;border:none;max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">职</div>
+      <div><strong>职练</strong><small>求职练习工作台 · 可点原型 v0.1</small></div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="home" class="active">工作台</button>
+      <button data-view="resume">简历</button>
+      <button data-view="interview">面试陪练</button>
+      <button data-view="report">复盘</button>
+      <button data-view="mistakes">错题本</button>
+      <button data-view="apps">投递台账</button>
+      <button data-view="settings">设置</button>
+    </nav>
+    <div class="acct"><span class="dot"></span>示例用户 · 免费验证版</div>
+  </header>
+
+  <main class="main">
+
+    <!-- ================= 工作台 ================= -->
+    <section class="view active" id="view-home">
+      <div class="hero">
+        <div>
+          <div class="date">2026 年 11 月 10 日 · 周二</div>
+          <h1 class="h1">晚上好，示例用户。</h1>
+          <p class="sub">距离你上次练习 3 天。简历改完了，但「量化表达」还没有练过——今天从这开始。</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn ghost" onclick="go('resume')">继续改简历</button>
+          <button class="btn accent" onclick="go('interview')">开始一场练习 →</button>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="card pad stat">
+          <div class="cap">简历完整度</div>
+          <div class="num">78<small>%</small></div>
+          <div class="bar" style="margin-top:8px"><i style="width:78%"></i></div>
+          <div class="cap" style="margin-top:6px">还差 2 个可验证的数字</div>
+        </div>
+        <div class="card pad stat">
+          <div class="cap">最近一场练习</div>
+          <div class="num">62<small>分</small></div>
+          <div class="bar accent" style="margin-top:8px"><i style="width:62%"></i></div>
+          <div class="cap" style="margin-top:6px">字节 · 用户增长运营（3 天前）</div>
+        </div>
+        <div class="card pad stat">
+          <div class="cap">待练弱项</div>
+          <div class="num">3<small>项</small></div>
+          <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+            <span class="chip red">量化</span><span class="chip red">结构</span><span class="chip red">追问</span>
+          </div>
+        </div>
+        <div class="card pad stat">
+          <div class="cap">投递进度</div>
+          <div class="num">18<small>投</small></div>
+          <div class="cap" style="margin-top:8px">6 场面试 · 1 个 Offer</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card pad">
+          <div class="between"><h2 class="h2" style="margin:0">今天的三件事</h2><span class="pill">按优先级排序</span></div>
+          <div style="margin-top:10px">
+            <div class="task" onclick="this.classList.toggle('done')">
+              <div class="box">✓</div>
+              <div><div class="t">把「电商平台巡检」那条改成能抗追问的版本</div><div class="d">缺口径：几个店铺、多少 SKU、数据怎么取 · 预计 15 分钟</div></div>
+            </div>
+            <div class="task" onclick="this.classList.toggle('done')">
+              <div class="box">✓</div>
+              <div><div class="t">练一场「用户增长运营」文字面试</div><div class="d">重点练量化表达 · 推荐 5 轮 · 约 12 分钟</div></div>
+            </div>
+            <div class="task" onclick="this.classList.toggle('done')">
+              <div class="box">✓</div>
+              <div><div class="t">回看上次的 2 道低分题</div><div class="d">「怎么说服团队」只拿了 3 分 · 有参考答案</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card pad">
+          <h2 class="h2">这周的状态</h2>
+          <div class="timeline">
+            <div class="step on">简历</div><div class="step on">练习</div><div class="step on">复盘</div>
+            <div class="step">投递</div><div class="step">面试</div>
+          </div>
+          <div class="divider"></div>
+          <dl class="kv">
+            <dt>练习</dt><dd>4 场（文字 3 · 语音 1）</dd>
+            <dt>平均分</dt><dd>64 → 上周 58</dd>
+            <dt>最大进步</dt><dd>具体性 +11</dd>
+            <dt>最大短板</dt><dd>结构（STAR）</dd>
+          </dl>
+          <div class="note" style="margin-top:12px">建议：下一场只练「结构」，答完先自己标一遍 S/T/A/R，再让数字人追问。</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="proto-note">原型说明：所有数据为模拟，用于确认信息架构与交互，不是最终视觉</span>
+        <span class="proto-note">数字人为 Canvas 简笔画占位，真机版本 3 帧嘴型 + 5 状态</span>
+      </div>
+    </section>
+
+    <!-- ================= 简历 ================= -->
+    <section class="view" id="view-resume">
+      <div class="between" style="margin-bottom:14px;flex-wrap:wrap">
+        <div>
+          <h1 class="h1">把简历改到位</h1>
+          <p class="sub">贴一个目标岗位的 JD，系统会指出「缺什么、哪句要改、改完能不能抗追问」。</p>
+        </div>
+        <div class="row" style="align-items:center">
+          <div class="verbar" id="verbar">
+            <button class="v active">通用底版</button>
+            <button class="v">字节 · 用户增长</button>
+            <button class="v">小红书 · 内容运营</button>
+            <button class="v" onclick="toast('原型：新建版本会以当前档案复制一份')">＋ 新建版本</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="resume-grid">
+        <!-- 左：档案与诊断 -->
+        <div class="col-profile">
+          <div class="card pad">
+            <div class="between"><h2 class="h2" style="margin:0">档案</h2><span class="chip green">完整度 78%</span></div>
+            <dl class="kv" style="margin-top:10px">
+              <dt>姓名</dt><dd>示例用户</dd>
+              <dt>院校</dt><dd>广州理工学院 · 自动化</dd>
+              <dt>目标</dt><dd>AI 产品运营 / 电商运营</dd>
+              <dt>可用</dt><dd>每周 4 天 · 3 个月</dd>
+            </dl>
+            <div class="divider"></div>
+            <div class="meta" style="letter-spacing:.16em">HR 视角诊断</div>
+            <div class="diag-row"><span>首屏信息</span><span>88</span></div>
+            <div class="bar"><i style="width:88%"></i></div>
+            <div class="diag-row"><span>经历价值</span><span>64</span></div>
+            <div class="bar"><i style="width:64%"></i></div>
+            <div class="diag-row"><span>语言专业度</span><span>71</span></div>
+            <div class="bar"><i style="width:71%"></i></div>
+            <div class="diag-row"><span>排版结构</span><span>90</span></div>
+            <div class="bar"><i style="width:90%"></i></div>
+            <div class="divider"></div>
+            <div class="issue"><div class="tag">数字无证据</div>「300 多个 SKU」没有口径（几个店铺？哪来的数？）<div class="fix">补：4 个店铺 / 后台导出 / 2026.06–09</div></div>
+            <div class="issue"><div class="tag">学生气</div>「参与」「帮忙看了」出现 4 次<div class="fix">改成：独立负责 / 搭建 / 复盘</div></div>
+            <div class="issue"><div class="tag">角色矛盾</div>「发起人 / 全流程交付」与「协助团队」同段<div class="fix">二选一，别既要主导又要配合</div></div>
+          </div>
+        </div>
+
+        <!-- 中：A4 预览 -->
+        <div class="col-paper paper-wrap">
+          <div class="toolbar">
+            <button class="btn sm ghost" onclick="toast('原型：切换模板')">模板：单栏</button>
+            <button class="btn sm ghost" onclick="toast('原型：字号 / 配色')">字号 100%</button>
+            <button class="btn sm" onclick="toast('原型：会打开浏览器打印，输出 1 页 A4（沿用上版打印契约）')">导出 PDF</button>
+          </div>
+          <div class="paper">
+            <div class="head-row">
+              <div>
+                <h1>示例用户</h1>
+                <div style="font-size:9.5px;color:#5a554b">求职意向：AI 产品运营 / 电商运营 · 每周 4 天，可实习 3 个月</div>
+              </div>
+              <div class="contact">159****9396<br>2856***demo@example.com<br>广州</div>
+            </div>
+            <div class="sec">
+              <div class="sec-t">教育背景</div>
+              <div class="item">
+                <div class="item-h"><span>广州理工学院 · 自动化（本科）</span><span>2023.09–2027.06</span></div>
+                <div class="item-s">GPA 3.4/4.0 · 专业排名 12/86</div>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="sec-t">实习经历</div>
+              <div class="item">
+                <div class="item-h"><span>示例公司 品牌A · 电商运营实习生</span><span>2026.03–至今</span></div>
+                <ul>
+                  <li>负责电商平台自营店铺到手价巡检，覆盖 <b>4 个店铺 300+ SKU</b>，把单次查询从 2 小时压到 10 分钟</li>
+                  <li class="blur" id="bullet2">参与客服质检，整理聊天记录中的问题分类</li>
+                  <li>配合团队完成日常运营支持</li>
+                </ul>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="sec-t">项目经历</div>
+              <div class="item">
+                <div class="item-h"><span>AI 文书辅助项目 · 发起人 / 全流程交付</span><span>2025.09–2026.05</span></div>
+                <ul>
+                  <li>梳理 15 类民事纠纷文书模板，自研 5 套提示词工作流，单份文书处理时间从 40–60 分钟缩短到 15–20 分钟</li>
+                  <li>累计交付 98 份文书，协助 89 人完成线上立案，满意度 95% 以上</li>
+                </ul>
+              </div>
+              <div class="item">
+                <div class="item-h"><span>电商平台到手价巡检与日报自动化 · 独立开发</span><span>2026.06–2026.09</span></div>
+                <ul>
+                  <li>搭建 SKU 价格巡检脚本，覆盖 4 个店铺 300+ SKU，单次查询 2 小时 → 10 分钟</li>
+                  <li>把日报数据源从 4 个平台聚合到一张表，减少人工复制粘贴出错</li>
+                </ul>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="sec-t">技能</div>
+              <div style="font-size:9.5px">Excel（透视表/VLOOKUP）· Python · SQL 基础 · 剪映 · 电商运营 · 客服质检 · 数据分析 · 提示词工程</div>
+            </div>
+          </div>
+          <div class="meta">A4 单页 · 文字层保留 · 打印 1 页（上版已验证）</div>
+        </div>
+
+        <!-- 右：JD 优化 -->
+        <div class="col-jd">
+          <div class="card pad">
+            <div class="between"><h2 class="h2" style="margin:0">按 JD 优化</h2><span class="pill">规则 + AI 混合</span></div>
+            <div class="jd-pre">贴目标岗位 JD（已预填示例）：</div>
+            <textarea class="jd-input" id="jdText">岗位：用户增长运营实习生
+职责：负责私域用户增长、社群运营与活动策划；通过数据分析定位增长机会；与产品、算法团队协作落地实验；输出周报并复盘。
+要求：熟悉 SQL / Excel；有 A/B 测试意识；有社群或内容运营经验；沟通协作能力强。</textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+              <button class="btn sm accent" id="btnAnalyze" onclick="analyzeJD()">分析匹配</button>
+              <button class="btn sm ghost" onclick="toast('原型：可上传 .docx / 粘贴文本')">上传 JD</button>
+              <span class="meta" id="jdHint"></span>
+            </div>
+
+            <div class="analysis" id="analysis">
+              <div class="match-ring">
+                <div class="ring" id="ring" style="--p:62"><b id="matchNum">62</b><small>%</small></div>
+                <div>
+                  <div style="font-size:12px;color:var(--muted)">关键词覆盖 5/8 · 硬门槛全过</div>
+                  <div style="font-size:11.5px;margin-top:4px">最大缺口：<b>A/B 测试</b> · <b>私域运营</b></div>
+                  <div style="font-size:11.5px;color:var(--accent)">别写清单：算法协作（你没有证据）</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+                <span class="chip green">数据分析</span><span class="chip green">SQL</span><span class="chip green">社群运营</span>
+                <span class="chip green">活动策划</span><span class="chip green">周报复盘</span>
+                <span class="chip red">A/B 测试</span><span class="chip red">私域运营</span><span class="chip red">算法协作</span>
+              </div>
+              <div class="meta" style="letter-spacing:.16em;margin:12px 0 8px">逐条改写（可一键采用）</div>
+              <div id="suggestList">
+                <div class="suggest">
+                  <div class="orig">参与客服质检，整理聊天记录中的问题分类</div>
+                  <div class="new">独立搭建客服质检问题分类表：抽检 1,200 条会话，归为 6 类高频问题，推动 3 项话术修改，重复咨询下降 18%</div>
+                  <div class="why">覆盖 <b>「数据分析」「复盘」</b>；把「参与/帮忙」换成可验证的动作与结果。采用前确认：1,200 条与 18% 是否真实。</div>
+                  <div class="acts"><button class="btn sm" onclick="adopt(this)">采用</button><button class="btn sm ghost" onclick="toast('原型：可以只改关键词或换一种说法')">换一版</button></div>
+                </div>
+                <div class="suggest">
+                  <div class="orig">配合团队完成日常运营支持</div>
+                  <div class="new">与产品、设计协作落地 2 次社群活动：从选题、物料到复盘独立推进，活动期新增私域用户 300+</div>
+                  <div class="why">覆盖 <b>「私域运营」「活动策划」</b>；补上协作对象与量级。采用前确认：活动次数与新增人数。</div>
+                  <div class="acts"><button class="btn sm" onclick="adopt(this)">采用</button><button class="btn sm ghost" onclick="toast('原型：可以只改关键词或换一种说法')">换一版</button></div>
+                </div>
+              </div>
+              <div class="note" style="margin-top:6px">原则：只改表达，不加事实。出现原文没有的数字会标红，必须你确认。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 面试陪练 ================= -->
+    <section class="view" id="view-interview">
+      <div class="interview">
+        <!-- 设置态 -->
+        <div id="setupPanel">
+          <h1 class="h1">练一场面试</h1>
+          <p class="sub">基于你的简历和目标 JD 出题，会追问，答完给逐题评分与参考答案。</p>
+          <div class="setup" style="margin-top:16px">
+            <div class="card pad">
+              <h2 class="h2">这场练什么</h2>
+              <div class="meta">目标岗位</div>
+              <select class="jd-input" id="roleSel" style="min-height:auto;height:38px">
+                <option>用户增长运营实习生 · 字节跳动</option>
+                <option>AI 产品运营实习生 · 某 AI 公司</option>
+                <option>内容运营实习生 · 小红书</option>
+              </select>
+              <div class="meta" style="margin-top:12px">面试官人格</div>
+              <div class="opt-row" id="personaRow">
+                <button class="btn sm ghost" data-p="peer">同级 · 温和</button>
+                <button class="btn sm ghost on" data-p="senior" style="background:var(--ink);color:var(--paper);border-color:var(--ink)">资深 · 会追问</button>
+                <button class="btn sm ghost" data-p="pressure">压力 · 快节奏</button>
+              </div>
+              <div class="meta">练习模式</div>
+              <div class="opt-row" id="modeRow">
+                <button class="btn sm" data-m="voice" style="background:var(--ink);color:var(--paper);border-color:var(--ink)">语音（推荐）</button>
+                <button class="btn sm ghost" data-m="text">文字</button>
+              </div>
+              <div class="meta">轮次</div>
+              <div class="opt-row" id="roundRow">
+                <button class="btn sm ghost" data-r="3">3 轮 · 约 8 分钟</button>
+                <button class="btn sm" data-r="5" style="background:var(--ink);color:var(--paper);border-color:var(--ink)">5 轮 · 约 15 分钟</button>
+              </div>
+            </div>
+            <div class="card pad">
+              <h2 class="h2">会根据这些提问</h2>
+              <dl class="kv">
+                <dt>简历</dt><dd>示例公司 品牌A 电商运营实习 / AI 文书辅助项目 / 电商平台巡检自动化</dd>
+                <dt>JD</dt><dd>用户增长 · 私域 · 数据分析 · A/B 测试 · 跨团队协作</dd>
+                <dt>重点</dt><dd>量化表达、追问抗压、STAR 结构</dd>
+              </dl>
+              <div class="divider"></div>
+              <div class="note">语音模式：录音 1–30 秒 → 转写 → 数字人追问；识别不准时可以改文字，不会丢记录。</div>
+              <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+                <button class="btn accent" onclick="startInterview()">开始面试 →</button>
+                <span class="meta">不扣次数 · 全免费验证期</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 进行态 -->
+        <div class="stage" id="stagePanel">
+          <div class="between" style="margin-bottom:10px">
+            <div>
+              <div class="meta">字节跳动 · 用户增长运营实习生 · 资深面试官</div>
+              <div style="font-family:var(--serif);font-size:20px">第 <span id="roundNow">1</span> 轮 / 共 5 轮</div>
+            </div>
+            <button class="btn sm ghost" onclick="finishInterview()">提前结束</button>
+          </div>
+
+          <div class="avatar-box">
+            <canvas id="avatar" width="460" height="460"></canvas>
+            <div class="avatar-status"><span class="pulse"></span><span id="avatarState">待机中</span></div>
+          </div>
+
+          <div class="progress-dots" id="dots"></div>
+          <div class="chat" id="chat"></div>
+
+          <div class="answer-box" id="answerBox">
+            <textarea id="answerInput" placeholder="用 STAR 结构说：情境 → 任务 → 行动 → 结果（原型里打字或点下方快捷句）"></textarea>
+            <div class="answer-foot">
+              <div class="quick">
+                <span class="chip" onclick="fillAnswer('我在示例公司实习时负责电商平台店铺的价格巡检')">我在示例公司实习时…</span>
+                <span class="chip" onclick="fillAnswer('这个项目我是独立完成的，从脚本到日报')">这个项目我是独立完成的…</span>
+              </div>
+              <div class="row" style="align-items:center">
+                <div class="rec" id="recBtn" onclick="toggleRec()"><div class="mic">●</div><span id="recText">按住说话</span></div>
+                <button class="btn sm accent" onclick="sendAnswer()">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 复盘 ================= -->
+    <section class="view" id="view-report">
+      <div class="between" style="margin-bottom:6px;flex-wrap:wrap">
+        <div>
+          <h1 class="h1">复盘报告</h1>
+          <p class="sub">字节跳动 · 用户增长运营实习生 · 语音场 · 2026-11-10 21:14 · 5 轮 8 题</p>
+        </div>
+        <div class="row">
+          <button class="btn ghost sm" onclick="go('interview')">再练一场</button>
+          <button class="btn sm" onclick="toast('原型：报告可导出 PDF / 分享链接')">导出报告</button>
+        </div>
+      </div>
+
+      <div class="score-head">
+        <div class="card pad"><div class="cap">总评</div><div class="num" style="font-family:var(--serif);font-size:30px">64</div><div class="bar accent" style="margin-top:8px"><i style="width:64%"></i></div></div>
+        <div class="card pad"><div class="cap">内容相关性</div><div class="num" style="font-family:var(--serif);font-size:30px">68</div><div class="bar"><i style="width:68%"></i></div></div>
+        <div class="card pad"><div class="cap">结构 STAR</div><div class="num" style="font-family:var(--serif);font-size:30px">52</div><div class="bar accent"><i style="width:52%"></i></div></div>
+        <div class="card pad"><div class="cap">具体性</div><div class="num" style="font-family:var(--serif);font-size:30px">71</div><div class="bar green"><i style="width:71%"></i></div></div>
+      </div>
+
+      <div class="note" style="margin-bottom:12px">评分只用于练习参考，不代表录用结论。每条分数都能指到你的原话和缺什么。</div>
+
+      <div id="reportList">
+        <div class="qcard open">
+          <div class="qcard-h" onclick="this.parentNode.classList.toggle('open')">
+            <div class="q">Q1. 先做个自我介绍，重点讲和用户增长相关的经历。<div class="meta" style="margin-top:4px">追问：你提到的「巡检」，具体是怎么定位增长机会的？</div></div>
+            <div class="sc">5<span style="font-size:12px;color:var(--muted)">/10</span></div>
+          </div>
+          <div class="qcard-b">
+            <div class="meta" style="letter-spacing:.16em;margin-bottom:6px">你的回答</div>
+            <div style="font-size:12.5px">我叫示例用户，自动化专业大三。在示例公司做过电商运营实习，主要负责电商平台店铺的价格巡检，还做过客服质检。项目上做过 AI 文书辅助和巡检自动化……</div>
+            <div class="dim"><span>内容</span><div class="bar"><i style="width:60%"></i></div><span>6</span></div>
+            <div class="dim"><span>结构</span><div class="bar accent"><i style="width:30%"></i></div><span>3</span></div>
+            <div class="dim"><span>具体</span><div class="bar"><i style="width:70%"></i></div><span>7</span></div>
+            <div class="dim"><span>表达</span><div class="bar"><i style="width:40%"></i></div><span>4</span></div>
+            <div class="ans-block"><div class="t">低分原因</div>30 秒里塞了 4 件事，没有一句落在「增长」上；面试官要的是和你投的岗最相关的那一段。</div>
+            <div class="ans-block"><div class="t">参考答案（可改写后重录）</div>「我最近一段经历是示例公司电商运营实习。我发现店铺到手价每天靠人工查，就写脚本把 4 个店铺、300+ SKU 的巡检压到 10 分钟——这让我第一次体会到：增长不是拉新，是先把漏掉的钱捡回来。所以我想做用户增长，先把数据链路跑通，再做实验。」</div>
+            <div class="replay"><span>▶</span><div class="track"><i></i></div><span>00:42</span><span class="chip" onclick="toast('原型：可回放录音并对照转写')">回放</span></div>
+          </div>
+        </div>
+
+        <div class="qcard">
+          <div class="qcard-h" onclick="this.parentNode.classList.toggle('open')">
+            <div class="q">Q2. 你说把巡检从 2 小时压到 10 分钟，具体怎么做的？<div class="meta" style="margin-top:4px">追问：如果数据源换了，这套脚本还能用吗？</div></div>
+            <div class="sc">7<span style="font-size:12px;color:var(--muted)">/10</span></div>
+          </div>
+          <div class="qcard-b">
+            <div class="meta" style="letter-spacing:.16em;margin-bottom:6px">你的回答</div>
+            <div style="font-size:12.5px">我用 Python 写了个脚本，从后台导出数据，然后匹配 SKU 和价格，最后生成日报发群里……数据源换了要改一下解析那部分。</div>
+            <div class="dim"><span>内容</span><div class="bar"><i style="width:80%"></i></div><span>8</span></div>
+            <div class="dim"><span>结构</span><div class="bar"><i style="width:60%"></i></div><span>6</span></div>
+            <div class="dim"><span>具体</span><div class="bar green"><i style="width:80%"></i></div><span>8</span></div>
+            <div class="dim"><span>表达</span><div class="bar"><i style="width:60%"></i></div><span>6</span></div>
+            <div class="ans-block"><div class="t">加分点</div>「数据源换了要改解析部分」——承认边界，比硬说通用更能加分。</div>
+            <div class="ans-block"><div class="t">可补一句</div>「我把解析层抽成了配置，换平台只改字段映射，不动主流程。」</div>
+          </div>
+        </div>
+
+        <div class="qcard">
+          <div class="qcard-h" onclick="this.parentNode.classList.toggle('open')">
+            <div class="q">Q3. 如果让你从 0 设计一个校园增长活动，你会怎么做？<div class="meta" style="margin-top:4px">追问：预算只有 2000 元，你怎么分配？</div></div>
+            <div class="sc">4<span style="font-size:12px;color:var(--muted)">/10</span></div>
+          </div>
+          <div class="qcard-b">
+            <div class="meta" style="letter-spacing:.16em;margin-bottom:6px">你的回答</div>
+            <div style="font-size:12.5px">先做调研，然后找几个社团合作，发传单，做抽奖，最后看数据。</div>
+            <div class="dim"><span>内容</span><div class="bar accent"><i style="width:40%"></i></div><span>4</span></div>
+            <div class="dim"><span>结构</span><div class="bar accent"><i style="width:30%"></i></div><span>3</span></div>
+            <div class="dim"><span>具体</span><div class="bar accent"><i style="width:30%"></i></div><span>3</span></div>
+            <div class="dim"><span>表达</span><div class="bar"><i style="width:50%"></i></div><span>5</span></div>
+            <div class="ans-block"><div class="t">低分原因</div>只有动作没有目标与指标，没有说「怎么判断成功」，也没有回答预算分配。</div>
+            <div class="ans-block"><div class="t">参考答案方向</div>目标（新增注册 500）→ 人群与渠道（大一新生群 / 社团）→ 钩子（资料包 + 抽奖）→ 预算分配（60% 奖品 / 30% 物料 / 10% 机动）→ 指标（转化率、留存）→ 复盘。</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" onclick="go('mistakes')">把低分题加入错题本 →</button>
+        <button class="btn ghost" onclick="toast('原型：生成 7 天训练计划')">生成训练计划</button>
+      </div>
+    </section>
+
+    <!-- ================= 错题本 ================= -->
+    <section class="view" id="view-mistakes">
+      <h1 class="h1">错题本</h1>
+      <p class="sub">不是「答错的题」，是「会被追问到答不好的点」。每一条都能直接重练。</p>
+
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card pad">
+          <h2 class="h2">三个弱项</h2>
+          <div class="issue"><div class="tag">结构 · 2 题低于 5 分</div>习惯先讲背景再讲动作，30 秒还没进入 STAR 的 A。
+            <div class="fix">训练：每题开头先给结论，再补背景。</div></div>
+          <div class="issue"><div class="tag">量化 · 3 处无口径</div>「很多」「大幅」「几个平台」——面试官一定会追问具体数字。
+            <div class="fix">训练：把每个数字补上「几个 / 多久 / 怎么来的」。</div></div>
+          <div class="issue"><div class="tag">追问抗压 · 2 次卡壳</div>被追问「为什么这么做」时容易退回「领导让我做的」。
+            <div class="fix">训练：给每个决定准备一个「如果不这么做会怎样」。</div></div>
+        </div>
+        <div class="card pad">
+          <h2 class="h2">7 天训练计划</h2>
+          <div class="task"><div class="box">✓</div><div><div class="t">Day 1–2 · 结构</div><div class="d">3 道行为题，每题先写结论再答</div></div></div>
+          <div class="task"><div class="box">✓</div><div><div class="t">Day 3–4 · 量化</div><div class="d">把简历 6 个数字补齐口径</div></div></div>
+          <div class="task"><div class="box">✓</div><div><div class="t">Day 5 · 追问</div><div class="d">压力人格练 1 场，只看「为什么」类追问</div></div></div>
+          <div class="task"><div class="box">✓</div><div><div class="t">Day 6–7 · 综合</div><div class="d">完整 5 轮，对比首场分数</div></div></div>
+          <div class="divider"></div>
+          <button class="btn accent sm" onclick="startInterview()">按计划开练 →</button>
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h2 class="h2">最近的错题</h2>
+        <table class="table">
+          <tr><th>题目</th><th>来源</th><th>失分</th><th>状态</th><th></th></tr>
+          <tr><td>从 0 设计校园增长活动</td><td>字节 · 用户增长</td><td>结构 3 / 具体 3</td><td><span class="badge red">待重练</span></td><td><button class="btn sm ghost" onclick="startInterview()">重练</button></td></tr>
+          <tr><td>怎么说服团队接受你的方案</td><td>小红书 · 内容运营</td><td>内容 4</td><td><span class="badge red">待重练</span></td><td><button class="btn sm ghost" onclick="startInterview()">重练</button></td></tr>
+          <tr><td>介绍一个你失败的项目</td><td>字节 · 用户增长</td><td>表达 5</td><td><span class="badge gold">练习中</span></td><td><button class="btn sm ghost" onclick="startInterview()">重练</button></td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 投递台账 ================= -->
+    <section class="view" id="view-apps">
+      <div class="between" style="flex-wrap:wrap">
+        <div><h1 class="h1">投递台账</h1><p class="sub">投了哪些、到哪一步、哪次面试暴露了什么——一条时间线看完。</p></div>
+        <button class="btn sm" onclick="toast('原型：新增投递记录')">＋ 记录一次投递</button>
+      </div>
+
+      <div class="grid-4" style="margin-top:16px">
+        <div class="card pad stat"><div class="cap">总投递</div><div class="num">18</div><div class="cap">本周 +4</div></div>
+        <div class="card pad stat"><div class="cap">进入面试</div><div class="num">6</div><div class="cap">转化 33%</div></div>
+        <div class="card pad stat"><div class="cap">Offer</div><div class="num">1</div><div class="cap">待确认</div></div>
+        <div class="card pad stat"><div class="cap">即将截止</div><div class="num">2</div><div class="cap">3 天内</div></div>
+      </div>
+
+      <div class="card" style="margin-top:14px;overflow:hidden">
+        <table class="table">
+          <tr><th>公司 · 岗位</th><th>阶段</th><th>最近动作</th><th>练习记录</th><th>截止</th></tr>
+          <tr><td><b>字节跳动</b> · 用户增长运营实习</td><td><span class="badge gold">二面待约</span></td><td>11-08 一面结束</td><td><a style="color:var(--green);cursor:pointer" onclick="go('report')">2 场 · 62→64</a></td><td>11-15</td></tr>
+          <tr><td><b>小红书</b> · 内容运营实习</td><td><span class="badge red">3 天内截止</span></td><td>11-06 已投</td><td><a style="color:var(--muted)">未练习</a></td><td>11-12</td></tr>
+          <tr><td><b>某 AI 公司</b> · 产品运营实习</td><td><span class="badge green">Offer</span></td><td>11-04 口头 offer</td><td><a style="color:var(--green);cursor:pointer" onclick="go('report')">3 场 · 58→71</a></td><td>—</td></tr>
+          <tr><td><b>美团</b> · 用户运营实习</td><td><span class="badge">已投</span></td><td>11-03 投递</td><td><a style="color:var(--muted)">未练习</a></td><td>11-20</td></tr>
+          <tr><td><b>网易</b> · 内容运营实习</td><td><span class="badge">已终止</span></td><td>10-28 简历未过</td><td><a style="color:var(--muted)">—</a></td><td>—</td></tr>
+        </table>
+      </div>
+      <div class="note" style="margin-top:10px">原则：投递不是越多次越好。同一个岗没练过就投，是浪费机会；练过再投，命中率差一个量级。</div>
+    </section>
+
+    <!-- ================= 设置 ================= -->
+    <section class="view" id="view-settings">
+      <h1 class="h1">设置</h1>
+      <p class="sub">账号、隐私与数据。录音比简历更敏感，所以这里放最重的开关。</p>
+
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card pad">
+          <h2 class="h2">账号</h2>
+          <dl class="kv">
+            <dt>登录方式</dt><dd>邮箱 · 2856***demo@example.com</dd>
+            <dt>当前版本</dt><dd>免费验证版（不扣次数）</dd>
+            <dt>练习记录</dt><dd>4 场 · 最早 1 场可回放</dd>
+          </dl>
+          <div class="divider"></div>
+          <div class="setting"><div><div class="t">数据导出</div><div class="d">导出简历、练习记录与转写（JSON / PDF）</div></div><button class="btn sm ghost" onclick="toast('原型：导出数据包')">导出</button></div>
+          <div class="setting"><div><div class="t">删除全部数据</div><div class="d">删除后不可恢复，包括录音</div></div><button class="btn sm ghost" style="color:var(--accent);border-color:var(--accent)" onclick="toast('原型：二次确认后删除')">删除</button></div>
+        </div>
+
+        <div class="card pad">
+          <h2 class="h2">隐私</h2>
+          <div class="setting"><div><div class="t">录音保存</div><div class="d">关闭后只保存转写，练习记录仍然可回看</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting"><div><div class="t">简历加密存储</div><div class="d">默认开启；导出与删除入口在账号页</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting"><div><div class="t">本地模型（本地 STT / LLM）</div><div class="d">需要本机安装 Ollama / Whisper，MVP 暂只留开关</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+          <div class="divider"></div>
+          <div class="meta">语音识别与合成失败时，自动切文字模式，不丢已答内容。</div>
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h2 class="h2">模型设置（可选）</h2>
+        <div class="row" style="flex-wrap:wrap;align-items:center">
+          <select class="jd-input" style="min-height:auto;height:36px;max-width:220px">
+            <option>DeepSeek（平台）</option><option>Ollama（本地）</option><option>自定义 OpenAI 兼容</option>
+          </select>
+          <input class="jd-input" style="min-height:auto;height:36px;max-width:300px" placeholder="API Key（只回显后 4 位）">
+          <button class="btn sm" onclick="toast('原型：保存并测试连通性')">测试连通</button>
+        </div>
+        <div class="note" style="margin-top:10px">策略：平台 Key 用于默认体验；自带 Key 不扣点、请求直连。两者都可随时切换。</div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="mobile-tabs" id="mobileTabs">
+    <button data-view="home" class="active"><span class="ic">◉</span>工作台</button>
+    <button data-view="resume"><span class="ic">▤</span>简历</button>
+    <button data-view="interview"><span class="ic">◍</span>陪练</button>
+    <button data-view="report"><span class="ic">✓</span>复盘</button>
+    <button data-view="mistakes"><span class="ic">✎</span>错题</button>
+    <button data-view="apps"><span class="ic">≡</span>台账</button>
+    <button data-view="settings"><span class="ic">⚙</span>设置</button>
+  </nav>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ================= 基础导航 ================= */
+function go(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  var el = document.getElementById('view-'+view);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('#tabs button,#mobileTabs button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view===view);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('#tabs button,#mobileTabs button').forEach(b=>{
+  b.addEventListener('click',()=>go(b.dataset.view));
+});
+
+var toastTimer=null;
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ================= 简历：JD 分析 ================= */
+var analyzed=false, adopted=0;
+function analyzeJD(){
+  if(analyzed){ toast('已经分析过这版 JD'); return; }
+  var hint=document.getElementById('jdHint');
+  hint.textContent='分析中…';
+  var btn=document.getElementById('btnAnalyze');
+  btn.disabled=true;
+  setTimeout(function(){
+    analyzed=true; btn.disabled=false; hint.textContent='';
+    document.getElementById('analysis').classList.add('show');
+    toast('分析完成：命中 5 个关键词，2 个缺口');
+  }, 900);
+}
+function adopt(btn){
+  var card=btn.closest('.suggest');
+  var orig=card.querySelector('.orig');
+  var neu=card.querySelector('.new');
+  orig.innerHTML='<b style="color:var(--green)">已采用</b>　'+neu.textContent;
+  orig.style.textDecoration='none';
+  neu.style.display='none';
+  btn.textContent='已采用'; btn.disabled=true;
+  adopted++;
+  var score=Math.min(82, 62 + adopted*6);
+  document.getElementById('ring').style.setProperty('--p', score);
+  document.getElementById('matchNum').textContent=score;
+  toast('已采用这条改写，匹配度更新为 '+score+'%');
+}
+
+/* ================= 数字人（Canvas 简笔画） ================= */
+var cv=document.getElementById('avatar'), ctx=cv.getContext('2d');
+var state='idle', mouthOpen=0, t0=performance.now(), blinkAt=0, blinkT=0;
+var stateLabels={idle:'待机中',listening:'在听你说',thinking:'正在想怎么追问',speaking:'面试官在说话',feedback:'在给你反馈'};
+function setAvatar(s){
+  state=s;
+  var el=document.getElementById('avatarState');
+  if(el) el.textContent=stateLabels[s]||s;
+}
+function drawAvatar(now){
+  var t=(now-t0)/1000;
+  var w=cv.width,h=cv.height,cx=w/2, cy=h/2+8;
+  ctx.clearRect(0,0,w,h);
+  // 呼吸/点头偏移
+  var bob = Math.sin(t*1.6)*4;
+  if(state==='listening') bob = Math.sin(t*2.2)*5;
+  if(state==='thinking') bob = -4 + Math.sin(t*1.1)*2;
+  if(state==='feedback') bob = Math.sin(t*5)*6;
+  cy += bob;
+  // 头
+  ctx.save();
+  ctx.strokeStyle='#1d1b17'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.ellipse(cx,cy,108,124,0,0,Math.PI*2); ctx.stroke();
+  // 耳朵
+  ctx.beginPath(); ctx.arc(cx-110,cy+10,15,Math.PI*0.5,Math.PI*1.5); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx+110,cy+10,15,Math.PI*1.5,Math.PI*0.5); ctx.stroke();
+  // 头发
+  ctx.beginPath();
+  ctx.moveTo(cx-106,cy-58);
+  ctx.quadraticCurveTo(cx-70,cy-150,cx,cy-128);
+  ctx.quadraticCurveTo(cx+70,cy-150,cx+106,cy-58);
+  ctx.stroke();
+  // 眉
+  var browY = cy-34 + (state==='thinking'?-7:0);
+  ctx.beginPath(); ctx.moveTo(cx-64,browY); ctx.quadraticCurveTo(cx-42,browY-8,cx-20,browY+1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+20,browY+1); ctx.quadraticCurveTo(cx+42,browY-8,cx+64,browY); ctx.stroke();
+  // 眼（眨眼）
+  var blink = (now-blinkAt<130)||(state==='thinking' && Math.sin(t*2)>0.7);
+  if(blink){
+    ctx.beginPath(); ctx.moveTo(cx-58,cy-8); ctx.lineTo(cx-26,cy-8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+26,cy-8); ctx.lineTo(cx+58,cy-8); ctx.stroke();
+  }else{
+    ctx.fillStyle='#1d1b17';
+    ctx.beginPath(); ctx.arc(cx-42,cy-8,8,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+42,cy-8,8,0,Math.PI*2); ctx.fill();
+    if(state==='listening'){ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx-40,cy-11,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+44,cy-11,3,0,Math.PI*2); ctx.fill(); }
+  }
+  // 鼻子
+  ctx.beginPath(); ctx.moveTo(cx,cy+2); ctx.quadraticCurveTo(cx+5,cy+14,cx-2,cy+18); ctx.stroke();
+  // 嘴（3 帧）
+  var m = mouthOpen;
+  ctx.beginPath();
+  if(m<0.25){
+    ctx.arc(cx,cy+40,22,0.15*Math.PI,0.85*Math.PI);
+    ctx.stroke();
+  }else if(m<0.62){
+    ctx.ellipse(cx,cy+46,20,10,0,0,Math.PI*2); ctx.stroke();
+  }else{
+    ctx.ellipse(cx,cy+48,22,17,0,0,Math.PI*2);
+    ctx.fillStyle='#1d1b17'; ctx.fill();
+  }
+  // 腮红（反馈/说话时）
+  if(state==='feedback'||state==='speaking'){
+    ctx.fillStyle='rgba(178,58,44,.12)';
+    ctx.beginPath(); ctx.arc(cx-78,cy+32,18,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+78,cy+32,18,0,Math.PI*2); ctx.fill();
+  }
+  // 思考气泡
+  if(state==='thinking'){
+    ctx.strokeStyle='#7a7367'; ctx.lineWidth=3;
+    for(var i=0;i<3;i++){ ctx.beginPath(); ctx.arc(cx+120+i*16, cy-96-i*10, 4+i*2, 0, Math.PI*2); ctx.stroke(); }
+  }
+  // 嘴型动画
+  if(state==='speaking'){
+    mouthOpen = 0.5 + 0.5*Math.sin(t*11);
+  }else if(state==='feedback'){
+    mouthOpen = 0.18 + 0.12*Math.sin(t*4);
+  }else{
+    mouthOpen = 0;
+  }
+  // 眨眼计时
+  if(now-blinkAt>2800+Math.random()*2200){ blinkAt=now; }
+  ctx.restore();
+  requestAnimationFrame(drawAvatar);
+}
+requestAnimationFrame(drawAvatar);
+
+/* ================= 面试流程 ================= */
+var qs=[
+  {q:'先做个自我介绍吧，重点讲和用户增长相关的经历。', hint:'第 1 题 · 开场'},
+  {q:'你说把巡检从 2 小时压到 10 分钟，具体怎么做的？', hint:'第 2 题 · 项目追问'},
+  {q:'如果数据源换了，这套脚本还能用吗？', hint:'追问 · 边界'},
+  {q:'如果让你从 0 设计一个校园增长活动，你会怎么做？', hint:'第 3 题 · 开放题'},
+  {q:'预算只有 2000 元，你怎么分配？', hint:'追问 · 取舍'},
+  {q:'你觉得自己最大的短板是什么？', hint:'第 4 题 · 自我认知'},
+  {q:'最后一个问题：你为什么想做用户增长？', hint:'第 5 题 · 动机'}
+];
+var qi=0, chat=document.getElementById('chat');
+function addMsg(text,who,extra){
+  var d=document.createElement('div');
+  d.className='msg '+(who==='ai'?'ai':'me');
+  d.innerHTML='<div class="who">'+(who==='ai'?'面试官':'你')+'</div><div>'+text+'</div>'+(extra?'<div class="quote">'+extra+'</div>':'');
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+  return d;
+}
+function askQuestion(i){
+  setAvatar('speaking');
+  addMsg('<span class="typing"><i></i><i></i><i></i></span>','ai');
+  setTimeout(function(){
+    chat.lastChild.remove();
+    addMsg(qs[i].q,'ai',qs[i].hint);
+    setAvatar('listening');
+    document.getElementById('roundNow').textContent=Math.min(5,1+Math.floor(i/1.4));
+    var dots=document.getElementById('dots');
+    dots.innerHTML='';
+    for(var k=0;k<qs.length;k++){ var e=document.createElement('i'); if(k<=i)e.className='on'; dots.appendChild(e); }
+    document.getElementById('answerInput').focus();
+  }, 1200);
+}
+function startInterview(){
+  go('interview');
+  document.getElementById('setupPanel').style.display='none';
+  document.getElementById('stagePanel').classList.add('show');
+  chat.innerHTML=''; qi=0;
+  setAvatar('thinking');
+  setTimeout(function(){ askQuestion(0); }, 600);
+}
+function fillAnswer(t){ document.getElementById('answerInput').value=t; }
+function sendAnswer(){
+  var input=document.getElementById('answerInput');
+  var v=input.value.trim();
+  if(!v){ toast('原型：先写一句回答，或点上面的快捷句'); return; }
+  addMsg(v,'me');
+  input.value='';
+  setAvatar('thinking');
+  if(qi>=qs.length-1){
+    setTimeout(function(){ finishInterview(); }, 900);
+    return;
+  }
+  setTimeout(function(){
+    // 针对第 1 题的追问；其余直接下一题
+    var follow = (qi===0) ? '你提到「巡检」——它是怎么帮你发现增长机会的？' : null;
+    if(follow){
+      addMsg(follow,'ai','追问 · 引用你的回答');
+      setAvatar('listening');
+      qi++;
+      setTimeout(function(){
+        if(qi<qs.length){ addMsg('（回答后继续）','ai',''); setAvatar('speaking'); }
+      }, 400);
+    }else{
+      qi++;
+      askQuestion(qi);
+    }
+  }, 1400);
+}
+function toggleRec(){
+  var b=document.getElementById('recBtn');
+  b.classList.toggle('on');
+  var txt=document.getElementById('recText');
+  if(b.classList.contains('on')){
+    txt.textContent='录音中… 点击停止';
+    toast('原型：录音 1–30 秒，停止后自动转写');
+  }else{
+    txt.textContent='按住说话';
+    document.getElementById('answerInput').value='（语音转写结果会出现在这里，可修改后发送）';
+    setAvatar('listening');
+  }
+}
+function finishInterview(){
+  setAvatar('feedback');
+  setTimeout(function(){ go('report'); toast('报告已生成：5 轮 8 题，总评 64'); }, 700);
+}
+
+/* 设置态按钮选中 */
+document.querySelectorAll('#personaRow .btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#personaRow .btn').forEach(function(x){ x.classList.remove('on'); x.style.background=''; x.style.color=''; x.style.borderColor=''; });
+    b.style.background='var(--ink)'; b.style.color='var(--paper)'; b.style.borderColor='var(--ink)';
+  });
+});
+document.querySelectorAll('#modeRow .btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#modeRow .btn').forEach(function(x){ x.style.background=''; x.style.color=''; x.style.borderColor=''; x.classList.add('ghost'); });
+    b.classList.remove('ghost'); b.style.background='var(--ink)'; b.style.color='var(--paper)'; b.style.borderColor='var(--ink)';
+  });
+});
+document.querySelectorAll('#roundRow .btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#roundRow .btn').forEach(function(x){ x.style.background=''; x.style.color=''; x.style.borderColor=''; x.classList.add('ghost'); });
+    b.classList.remove('ghost'); b.style.background='var(--ink)'; b.style.color='var(--paper)'; b.style.borderColor='var(--ink)';
+  });
+});
+
+/* 回放模拟 */
+document.querySelectorAll('.replay').forEach(function(r){
+  r.addEventListener('click',function(e){
+    if(e.target.classList.contains('chip')) return;
+    var bar=r.querySelector('.track i');
+    var w=0;
+    var t=setInterval(function(){
+      w+=3; if(w>100){ clearInterval(t); w=0; }
+      bar.style.width=w+'%';
+    },90);
+    toast('原型：回放录音（真实版本按句标时间轴）');
+  });
+});
+
+/* 版本条切换 */
+document.querySelectorAll('#verbar .v').forEach(function(v){
+  v.addEventListener('click',function(){
+    if(v.textContent.indexOf('新建')>=0) return;
+    document.querySelectorAll('#verbar .v').forEach(function(x){ x.classList.remove('active'); });
+    v.classList.add('active');
+    toast('原型：切换到「'+v.textContent+'」，改动只写当前版本');
+  });
+});
+
+/* 哈希路由：方便直接打开某个视图 / 截图验收（#resume #interview #interview-run #report ...） */
+(function(){
+  var h = (location.hash||'').replace('#','');
+  if(!h) return;
+  document.body.classList.add('no-anim');
+  if(h==='interview-run'){ setTimeout(startInterview, 300); }
+  else { go(h); }
+  if(h==='report'){ document.querySelectorAll('.qcard').forEach(function(c,i){ if(i===0) c.classList.add('open'); }); }
+})();
+
+</script>
+</body>
+</html>

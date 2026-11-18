@@ -1,0 +1,167 @@
+{
+  "id": "u_sample_demo",
+  "basic": {
+    "name": "示例用户",
+    "phone": "13800000000",
+    "email": "demo@example.com",
+    "city": "广州",
+    "photo": ""
+  },
+  "intent": {
+    "targetRoles": [
+      "AI 产品运营",
+      "电商运营"
+    ],
+    "available": "每周 4 天 · 3 个月",
+    "expectedCity": [
+      "广州",
+      "深圳"
+    ]
+  },
+  "education": [
+    {
+      "school": "广州理工学院",
+      "major": "自动化",
+      "degree": "本科",
+      "time": "2023.09 - 2027.06",
+      "gpa": "3.4/4.0",
+      "notes": [
+        "专业排名 12/86"
+      ]
+    }
+  ],
+  "internships": [
+    {
+      "org": "示例公司 品牌A",
+      "role": "电商运营实习生",
+      "time": "2026.03 - 至今",
+      "bullets": [
+        {
+          "text": "负责电商平台自营店铺的到手价巡检，协助团队整理 300 多个 SKU 的价格数据，然后每天发到群里",
+          "evidence": "",
+          "metrics": [],
+          "status": "missing"
+        },
+        {
+          "text": "参与了客服质检的工作，帮忙看了很多聊天记录，整理出一些问题的分类",
+          "evidence": "",
+          "metrics": [],
+          "status": "missing"
+        },
+        {
+          "text": "沟通能力强，吃苦耐劳，能配合团队完成各类工作",
+          "evidence": "",
+          "metrics": [],
+          "status": "missing"
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "AI 文书辅助项目（个人独立运营）",
+      "role": "发起人 / 全流程交付",
+      "time": "2025.09 - 2026.05",
+      "bullets": [
+        {
+          "text": "梳理 15 类民事纠纷文书模板，自研 5 套提示词工作流，单份文书处理时间从 40-60 分钟缩短到 15-20 分钟",
+          "evidence": "项目台账 + 交付记录截图",
+          "metrics": [
+            "15 类",
+            "5 套",
+            "40-60→15-20 分钟"
+          ],
+          "status": "verified"
+        },
+        {
+          "text": "累计交付 98 份文书，协助 89 人完成线上立案，满意度 95% 以上",
+          "evidence": "交付台账（2026.05 导出）",
+          "metrics": [
+            "98 份",
+            "89 人",
+            "95%"
+          ],
+          "status": "verified"
+        },
+        {
+          "text": "帮助用户写文书，做了快一年，接了一百多个人",
+          "evidence": "",
+          "metrics": [],
+          "status": "missing"
+        }
+      ]
+    },
+    {
+      "name": "电商平台到手价巡检与日报自动化",
+      "role": "独立开发",
+      "time": "2026.06 - 2026.09",
+      "bullets": [
+        {
+          "text": "搭建 SKU 价格巡检脚本，覆盖 4 个店铺 300+ SKU，把单次查询从 2 小时压缩到 10 分钟",
+          "evidence": "运行日志 + 巡检日报",
+          "metrics": [
+            "300+ SKU",
+            "2 小时→10 分钟"
+          ],
+          "status": "verified"
+        },
+        {
+          "text": "把日报数据源从 4 个平台聚合到一张表，减少人工复制粘贴的出错",
+          "evidence": "",
+          "metrics": [],
+          "status": "missing"
+        }
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "group": "工具",
+      "items": [
+        "Excel（透视表/VLOOKUP）",
+        "Python",
+        "SQL 基础",
+        "剪映"
+      ]
+    },
+    {
+      "group": "业务",
+      "items": [
+        "电商运营",
+        "客服质检",
+        "数据分析",
+        "流程自动化"
+      ]
+    },
+    {
+      "group": "AI",
+      "items": [
+        "提示词工程",
+        "工作流编排",
+        "智能体搭建"
+      ]
+    }
+  ],
+  "summary": "自动化专业本科在读，做过电商运营与客服质检实习，独立搭建过价格巡检与日报自动化工具。认真负责，学习能力强，希望往 AI 产品运营方向发展。",
+  "evidence": [
+    {
+      "id": "e1",
+      "claim": "98 份文书 / 89 人立案",
+      "source": "项目交付台账",
+      "status": "verified"
+    },
+    {
+      "id": "e2",
+      "claim": "300+ SKU / 2 小时→10 分钟",
+      "source": "巡检运行日志",
+      "status": "verified"
+    }
+  ],
+  "preferences": {
+    "theme": "blue",
+    "fontPct": 100,
+    "template": "single",
+    "tone": "克制专业"
+  },
+  "versions": []
+}

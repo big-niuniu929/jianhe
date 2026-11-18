@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>OfferFit · 测试清单</title>
+<style>
+:root{
+  --paper:#f7f3ea; --paper-2:#fffdf8; --ink:#1d1b17; --ink-2:#4a453c; --muted:#7a7367;
+  --line:#d7cfbe; --line-2:#e8e1d2; --accent:#b23a2c; --accent-soft:#f3ded8;
+  --green:#2e6b63; --green-soft:#dfeae6; --gold:#9a7b34; --gold-soft:#f1e8d2;
+  --serif:"Songti SC","Source Han Serif SC","Noto Serif SC",Georgia,serif;
+  --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#e9e3d5;color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6}
+.app{max-width:1080px;margin:0 auto;min-height:100vh;background:var(--paper);border-left:1px solid var(--line);border-right:1px solid var(--line);padding-bottom:40px}
+header{position:sticky;top:0;z-index:20;background:var(--paper-2);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{width:34px;height:34px;display:grid;place-items:center;background:var(--ink);color:var(--paper);font-family:var(--serif);font-size:19px}
+h1{font-family:var(--serif);font-size:20px;margin:0;letter-spacing:.06em}
+.sub{color:var(--muted);font-size:11.5px}
+.spacer{flex:1}
+.btn{padding:6px 12px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-size:12px;cursor:pointer;border-radius:2px}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:active{transform:translateY(1px)}
+.progress-wrap{padding:14px 24px 4px}
+.bar{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--green);width:0;transition:.3s}
+.progress-text{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+main{padding:0 24px}
+.group{margin-top:22px}
+.group h2{font-family:var(--serif);font-size:17px;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+.group h2 small{font-family:var(--sans);font-size:11px;color:var(--muted)}
+.item{border:1px solid var(--line-2);background:var(--paper-2);padding:11px 13px;margin-bottom:8px;display:flex;gap:14px;align-items:flex-start}
+.item.pass{border-left:3px solid var(--green)}
+.item.fail{border-left:3px solid var(--accent)}
+.item.skip{border-left:3px solid var(--gold)}
+.item .id{font-family:var(--mono,monospace);font-size:11.5px;color:var(--muted);min-width:34px;padding-top:2px}
+.item .body{flex:1;min-width:0}
+.item .title{font-size:13.5px;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.p0{font-size:9.5px;color:var(--accent);border:1px solid var(--accent);padding:0 5px;border-radius:99px;letter-spacing:.1em}
+.item .meta{font-size:11.5px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.item .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap}
+.act{padding:4px 9px;border:1px solid var(--line);background:transparent;font-size:11.5px;cursor:pointer;border-radius:2px;color:var(--ink-2)}
+.act.on-pass{background:var(--green);border-color:var(--green);color:#fff}
+.act.on-fail{background:var(--accent);border-color:var(--accent);color:#fff}
+.act.on-skip{background:var(--gold);border-color:var(--gold);color:#fff}
+.note{padding:14px 24px;color:var(--muted);font-size:11.5px}
+#result{display:none;margin:16px 24px;background:var(--paper-2);border:1px solid var(--line);padding:14px}
+#result textarea{width:100%;min-height:240px;font-family:monospace;font-size:12px;border:1px solid var(--line);padding:10px;background:#fff}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;font-size:12px;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}
+@media (max-width:700px){
+  .item{flex-wrap:wrap}
+  .item .acts{width:100%;justify-content:flex-end}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">O</div>
+    <div><h1>OfferFit · 测试清单</h1><div class="sub">MVP v0.7 · 逐条点「通过 / 失败 / 跳过」，进度自动保存</div></div>
+    <div class="spacer"></div>
+    <button class="btn ghost" onclick="toggleFilter()" id="filterBtn">只看未测</button>
+    <button class="btn ghost" onclick="resetAll()">重置</button>
+    <button class="btn" onclick="buildResult()">生成结果</button>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="bar"><i id="bar"></i></div>
+    <div class="progress-text"><span id="pText">0 / 0 已测</span><span id="pBreak"></span></div>
+  </div>
+
+  <main id="list"></main>
+
+  <div id="result">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <b>测试结果</b>
+      <span><button class="btn ghost" onclick="copyResult()">复制</button>
+      <button class="btn ghost" onclick="downloadResult()">下载 .md</button></span>
+    </div>
+    <textarea id="resultText" readonly></textarea>
+  </div>
+
+  <div class="note">
+    提示：先双击 <b>启动OfferFit.bat</b>，再打开 http://127.0.0.1:8848 。失败项请带「期望 vs 实际」反馈。
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const GROUPS = [
+  {name:"A · 启动与停止", items:[
+    {id:"A1",p0:true,t:"一键启动",s:"双击 启动OfferFit.bat",e:"服务启动并自动打开 http://127.0.0.1:8848"},
+    {id:"A2",t:"重复启动",s:"服务已在运行时再双击启动",e:"直接打开浏览器，不报端口占用"},
+    {id:"A3",p0:true,t:"停止服务",s:"双击 停止OfferFit.bat",e:"端口关闭，刷新页面打不开"},
+    {id:"A4",t:"健康检查",s:"访问 /api/health",e:"返回 service=offerfit、version=0.7.0"},
+    {id:"A5",t:"数据持久化",s:"关浏览器 → 重开",e:"档案/练习/台账仍在"},
+    {id:"A6",t:"服务重启持久化",s:"重启服务后重开页面",e:"数据仍在，版本记录不丢"},
+    {id:"A7",t:"断网降级",s:"断网后使用诊断/JD/规则陪练",e:"规则功能可用；LLM/TTS 降级不崩"},
+    {id:"A8",t:"控制台干净",s:"F12 Console 刷新",e:"无红色 JS 报错"}
+  ]},
+  {name:"B · 工作台", items:[
+    {id:"B1",t:"状态卡",s:"打开首页",e:"完整度/诊断分/练习场次/投递数与实际一致"},
+    {id:"B2",t:"今日待办",s:"看「今天要处理的事」",e:"来自诊断 Top3，可勾选"},
+    {id:"B3",t:"练习状态",s:"看右侧",e:"场次、最近总评、存储位置正确"},
+    {id:"B4",t:"快捷入口",s:"点「开始一场练习」",e:"跳到面试陪练页"}
+  ]},
+  {name:"C · 简历与诊断", items:[
+    {id:"C1",t:"档案展示",s:"打开简历页",e:"姓名/院校/目标/可用时间正确"},
+    {id:"C2",t:"四维诊断",s:"看左侧诊断",e:"四个维度分数 + 等级 + 问题条数"},
+    {id:"C3",t:"问题可执行",s:"看问题列表",e:"每条有「问题 + 改法」，能指到具体句子"},
+    {id:"C4",t:"A4 预览",s:"看中间",e:"内容与档案一致，单页"},
+    {id:"C5",t:"打印",s:"Ctrl+P",e:"打印预览 1 页、导航隐藏、文字层保留"},
+    {id:"C6",t:"移动端布局",s:"390px 宽",e:"单栏，预览优先"}
+  ]},
+  {name:"D · JD 优化与改写", items:[
+    {id:"D1",t:"JD 分析",s:"贴 JD → 分析匹配",e:"出匹配分/等级/关键词覆盖"},
+    {id:"D2",t:"关键词着色",s:"看关键词 chips",e:"命中绿色、缺口红色"},
+    {id:"D3",t:"改写生成",s:"分析后看「逐条改写」",e:"2–3 条建议，每条 A/B/C 三版"},
+    {id:"D4",t:"版本切换",s:"点 A/B/C",e:"文案与理由随之变化"},
+    {id:"D5",p0:true,t:"采用改写",s:"点「采用这版」",e:"匹配分上升、诊断刷新、A4 更新"},
+    {id:"D6",t:"事实防新增",s:"采用含数字的改写",e:"新增数字会提示「采用前确认」"},
+    {id:"D7",t:"空 JD",s:"清空 JD 直接分析",e:"不报错（提示先贴 JD）"}
+  ]},
+  {name:"E · 一岗一版", items:[
+    {id:"E1",t:"版本条",s:"看顶部",e:"每版显示名字+诊断分，当前高亮"},
+    {id:"E2",t:"新建版本",s:"点「＋ 新建版本」",e:"新版本出现，绑当前 JD"},
+    {id:"E3",t:"切换版本",s:"点另一个版本",e:"诊断分/A4/JD 文本同步变化"},
+    {id:"E4",t:"自动保存",s:"改一条 → 切走 → 切回",e:"改动还在"},
+    {id:"E5",t:"版本对比",s:"点「与通用底版对比」",e:"显示新增/删除/修改条数"},
+    {id:"E6",t:"删除版本",s:"点版本后的 ×",e:"删除并回到通用底版"},
+    {id:"E7",t:"底版保护",s:"尝试删通用底版",e:"不允许删除"},
+    {id:"E8",t:"重启持久化",s:"重启服务",e:"版本仍在"}
+  ]},
+  {name:"F · 简历上传解析", items:[
+    {id:"F1",p0:true,t:"docx 解析",s:"上传 .docx",e:"预览教育/实习/项目/技能"},
+    {id:"F2",t:"确认导入",s:"弹窗点确定",e:"档案覆盖、诊断刷新"},
+    {id:"F3",t:"txt 解析",s:"上传 .txt",e:"正常解析"},
+    {id:"F4",p0:true,t:"pdf 解析",s:"上传 .pdf",e:"抽取文字层解析（扫描件提示无文字）"},
+    {id:"F5",t:"异常文件",s:"上传空文件/超大文件",e:"明确报错，不崩"},
+    {id:"F6",t:"取消导入",s:"弹窗点取消",e:"原档案不变"}
+  ]},
+  {name:"G · ATS 可解析性", items:[
+    {id:"G1",t:"ATS 清单",s:"简历页左下",e:"显示通过/警告/失败/建议/未检 计数"},
+    {id:"G2",p0:true,t:"导出并回读",s:"点「导出 PDF 并回读」",e:"计数更新，出现下载 PDF"},
+    {id:"G3",t:"文字层",s:"下载 PDF 后复制文字",e:"中文可复制、不乱码"},
+    {id:"G4",t:"标题完整",s:"看回读结果",e:"标题未被拆成单字（如「教育背景」完整）"},
+    {id:"G5",t:"字体数",s:"看回读结果",e:"字体数 ≤ 2"},
+    {id:"G6",t:"版面规则",s:"看页边距/页眉页脚规则",e:"不误报"},
+    {id:"G7",t:"PDF 可打开",s:"双击下载的 PDF",e:"1 页、排版正确"},
+    {id:"G8",t:"不出总分",s:"看 ATS 区",e:"只有五态计数，没有总分"}
+  ]},
+  {name:"H · 面试陪练", items:[
+    {id:"H1",t:"设置",s:"陪练页",e:"岗位/JD/轮次可选，语音朗读开关可用"},
+    {id:"H2",p0:true,t:"出题",s:"点开始面试",e:"出第 1 题（LLM 或规则）"},
+    {id:"H3",p0:true,t:"LLM 出题",s:"已配 Key 时开始",e:"题目引用简历具体内容"},
+    {id:"H4",t:"作答反馈",s:"回答后发送",e:"显示本题得分 + 一句改法"},
+    {id:"H5",t:"追问逻辑",s:"回答空泛/具体各试一次",e:"空泛会追问，具体可能直接下一题"},
+    {id:"H6",t:"结束生成报告",s:"答完最后一题",e:"自动生成并跳转复盘"},
+    {id:"H7",t:"提前结束",s:"中途点「提前结束」",e:"按已答内容生成报告"},
+    {id:"H8",t:"降级",s:"断网/Key 失效时开始",e:"回退规则出题，流程不中断"},
+    {id:"H9",t:"不重复",s:"连续两场同岗位",e:"题目不应完全一样"}
+  ]},
+  {name:"I · 语音", items:[
+    {id:"I1",t:"语音朗读",s:"开始面试",e:"能听到面试官中文提问"},
+    {id:"I2",t:"嘴型",s:"观察数字人",e:"说话时嘴型随音频变化（3 帧）"},
+    {id:"I3",t:"TTS 降级",s:"断网后开始",e:"降级浏览器语音或文字，不卡住"},
+    {id:"I4",p0:true,t:"录音转写",s:"点录音 → 说话 → 停止",e:"转写文本回填回答框"},
+    {id:"I5",t:"专业词",s:"说「示例公司 / 电商平台 / SKU」",e:"关键词识别正确（热词来自档案）"},
+    {id:"I6",t:"不支持录音",s:"拒绝麦克风权限",e:"明确提示，仍可文字作答"},
+    {id:"I7",t:"首次较慢",s:"重启后第一次转写",e:"模型加载稍慢，后续变快"}
+  ]},
+  {name:"J · 复盘 / 错题 / 台账", items:[
+    {id:"J1",t:"报告总览",s:"复盘页",e:"总评 + 四维分 + 逐题"},
+    {id:"J2",t:"逐题展开",s:"点题目",e:"回答/分项/建议/框架可见"},
+    {id:"J3",t:"历史练习",s:"点顶部历史练习条",e:"切换加载对应报告"},
+    {id:"J4",t:"错题本",s:"打开错题本",e:"弱项 + 训练计划（可勾选）"},
+    {id:"J5",t:"新增投递",s:"台账点「＋ 记录一次投递」",e:"新增成功，统计更新"},
+    {id:"J6",t:"改状态",s:"下拉改阶段",e:"统计同步更新"},
+    {id:"J7",t:"删除投递",s:"点删除并确认",e:"记录删除"},
+    {id:"J8",t:"持久化",s:"重启服务",e:"台账与练习记录仍在"}
+  ]},
+  {name:"K · 设置与数据", items:[
+    {id:"K1",t:"运行信息",s:"打开设置",e:"服务版本/Python/数据路径正确"},
+    {id:"K2",t:"未配置 LLM",s:"清除 Key 后开始练习",e:"状态「未配置」，走规则"},
+    {id:"K3",p0:true,t:"配置 LLM",s:"填 Key → 保存 → 测试连通",e:"显示尾号，连通成功"},
+    {id:"K4",t:"清除 Key",s:"点「清除 Key」",e:"恢复未配置，练习回退规则"},
+    {id:"K5",p0:true,t:"数据导出",s:"点「导出」",e:"下载 JSON，含档案/版本/练习/投递，不含 Key"},
+    {id:"K6",t:"删除全部数据",s:"点删除 → 输入 DELETE",e:"重置成功，示例档案恢复"},
+    {id:"K7",t:"隐私开关",s:"切换开关",e:"状态可切换（本地偏好）"}
+  ]},
+  {name:"L · 移动端 / 打印", items:[
+    {id:"L1",t:"不横向溢出",s:"390px 宽逐页看",e:"无横向滚动"},
+    {id:"L2",t:"底部导航",s:"手机上点 7 个 tab",e:"都能切换"},
+    {id:"L3",t:"简历单栏",s:"手机看简历",e:"预览优先、可读"},
+    {id:"L4",t:"陪练可用",s:"手机答一题",e:"输入/发送/录音可用"},
+    {id:"L5",t:"打印简历",s:"手机/电脑打印",e:"1 页 A4、导航隐藏"},
+    {id:"L6",t:"打印报告",s:"打印复盘",e:"版式正常"}
+  ]}
+];
+
+const KEY = "offerfit_qc_v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){ state = {}; }
+let onlyUntested = false;
+
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function allItems(){ return GROUPS.flatMap(g => g.items.map(i => Object.assign({group:g.name}, i))); }
+
+function render(){
+  const list = document.getElementById('list');
+  list.innerHTML = GROUPS.map(g => {
+    const items = g.items.filter(i => !onlyUntested || !state[i.id]);
+    if(!items.length) return "";
+    const done = g.items.filter(i => state[i.id]).length;
+    return '<section class="group"><h2>'+g.name+'<small>'+done+' / '+g.items.length+'</small></h2>'+
+      items.map(i => {
+        const st = state[i.id];
+        return '<div class="item '+(st||'')+'">'+
+          '<div class="id">'+i.id+'</div>'+
+          '<div class="body"><div class="title">'+i.t+(i.p0?'<span class="p0">P0</span>':'')+'</div>'+
+          '<div class="meta">步骤：'+i.s+' ｜ 期望：'+i.e+'</div></div>'+
+          '<div class="acts">'+
+            '<button class="act '+(st==='pass'?'on-pass':'')+'" onclick="mark(\''+i.id+'\',\'pass\')">通过</button>'+
+            '<button class="act '+(st==='fail'?'on-fail':'')+'" onclick="mark(\''+i.id+'\',\'fail\')">失败</button>'+
+            '<button class="act '+(st==='skip'?'on-skip':'')+'" onclick="mark(\''+i.id+'\',\'skip\')">跳过</button>'+
+          '</div></div>';
+      }).join('')+'</section>';
+  }).join('');
+  updateProgress();
+}
+function mark(id, v){
+  if(state[id] === v) delete state[id]; else state[id] = v;
+  save(); render();
+}
+function updateProgress(){
+  const all = allItems();
+  const pass = all.filter(i => state[i.id]==='pass').length;
+  const fail = all.filter(i => state[i.id]==='fail').length;
+  const skip = all.filter(i => state[i.id]==='skip').length;
+  const done = pass+fail+skip;
+  document.getElementById('bar').style.width = (all.length? done/all.length*100:0)+'%';
+  document.getElementById('pText').textContent = done+' / '+all.length+' 已测';
+  document.getElementById('pBreak').textContent = '通过 '+pass+' · 失败 '+fail+' · 跳过 '+skip+' · 未测 '+(all.length-done);
+  document.getElementById('filterBtn').textContent = onlyUntested ? '显示全部' : '只看未测';
+}
+function toggleFilter(){ onlyUntested = !onlyUntested; render(); }
+function resetAll(){
+  if(!confirm('清空本机测试进度？')) return;
+  state = {}; save(); document.getElementById('result').style.display='none'; render();
+}
+function buildResult(){
+  const all = allItems();
+  const pass = all.filter(i => state[i.id]==='pass');
+  const fail = all.filter(i => state[i.id]==='fail');
+  const skip = all.filter(i => state[i.id]==='skip');
+  const untested = all.filter(i => !state[i.id]);
+  let md = '# OfferFit 测试结果\n\n';
+  md += '- 时间：'+new Date().toLocaleString('zh-CN')+'\n';
+  md += '- 统计：共 '+all.length+' 条 · 通过 '+pass.length+' · 失败 '+fail.length+' · 跳过 '+skip.length+' · 未测 '+untested.length+'\n\n';
+  if(fail.length){
+    md += '## 失败\n\n| 编号 | 用例 | 期望 | 实际 |\n|---|---|---|---|\n';
+    fail.forEach(i => { md += '| '+i.id+' | '+i.t+' | '+i.e+' | （请填写） |\n'; });
+    md += '\n';
+  }
+  if(skip.length){
+    md += '## 跳过\n\n' + skip.map(i => '- '+i.id+' '+i.t).join('\n') + '\n\n';
+  }
+  if(untested.length){
+    md += '## 未测\n\n' + untested.map(i => '- '+i.id+' '+i.t).join('\n') + '\n';
+  }
+  const box = document.getElementById('result');
+  box.style.display = 'block';
+  document.getElementById('resultText').value = md;
+  box.scrollIntoView({behavior:'smooth'});
+  window._result = md;
+}
+function copyResult(){
+  const t = document.getElementById('resultText');
+  t.select(); document.execCommand('copy');
+  toast('已复制');
+}
+function downloadResult(){
+  const blob = new Blob([document.getElementById('resultText').value], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'OfferFit-测试结果-'+new Date().toISOString().slice(0,10)+'.md';
+  a.click();
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+render();
+</script>
+</body>
+</html>
