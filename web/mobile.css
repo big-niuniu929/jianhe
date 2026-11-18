@@ -1,0 +1,313 @@
+/* =========================================================
+   落笔 · 移动端（≤860px）
+   =========================================================
+   为什么单独一个文件，而不是往 styles.css 里加几段媒体查询：
+   桌面版是三栏工作台，手机版是"一次只干一件事"。两者不是缩放关系，
+   是两套信息架构。混在同一个文件里，以后改桌面一定会不小心改坏手机。
+
+   手机端的三个真实约束（都来自"求职者在地铁上打开"这个场景）：
+   1. 一屏只能放一个面板 → 对话 / 简历 / 诊断 用底部分段切换
+   2. A4 纸在 360px 宽上按比例缩到 0.45，字只有 6px，等于看不见
+      → 默认用「阅读模式」排版，需要看页数再切回 A4
+   3. 顶栏、版本条、分段条加起来不能超过约 150px，否则内容区没地方
+   ========================================================= */
+
+/* ---------------- 基础 ---------------- */
+/* 阅读模式开关与底部分段条只在手机上出现。
+   折叠态必须显式 display:none —— 它们是被 JS 一直在插入 DOM 的，
+   不关掉的话，桌面上会多出一行把三栏挤扁。 */
+.mob-read-btn, .mobtabs { display: none; }
+
+@media (max-width: 860px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  @supports (height: 100dvh) { body { height: 100dvh; } }
+
+  /* 输入框小于 16px 时 iOS 会自动放大页面，而放大后不会自己缩回去 —— 
+     这是移动端最常见、也最难解释的"页面坏了" */
+  input, textarea, select { font-size: 16px; }
+  .composer textarea, .ask-bar input, .ask-bar textarea { font-size: 16px; }
+
+  /* ---------------- 顶栏 ---------------- */
+  .topbar {
+    height: auto; min-height: 50px; padding: 8px 12px;
+    gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .brand { min-width: 0; flex: 1; gap: 8px; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 0; font-size: 14px; }
+  .brand-text strong { font-size: 13px; }
+  .brand-text span { display: none; }
+  .engine { display: none; }
+  .top-right { margin-left: 0; gap: 6px; }
+  .top-right .ghost { display: none; }
+  .top-right #btnProfile { display: inline-block; padding: 5px 9px; font-size: 12px; }
+  .acct { padding: 5px 9px; font-size: 12px; }
+
+  /* 标签栏
+     paper.css 里 .tabs 是 height:100% + align-items:stretch（桌面端用来
+     让栏目条填满顶栏、朱红下压线贴在顶栏底线）。手机上它独占一行后，
+     100% 参照的是被自己撑大的顶栏，实测算出 72px 高，
+     底部的下压线就掉到版本条上、横穿「还没有版本…」那行字。
+     所以这里必须显式 height:auto，让高度由按钮的 padding 决定。
+     border-left 是桌面端的栏目分隔线，全宽排布后没用，去掉。 */
+  .tabs {
+    order: 3; width: 100%; overflow-x: auto; scrollbar-width: none;
+    justify-content: flex-start; padding: 0; height: auto;
+    border-left: 0; background: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  /* 5 个 tab 要能一屏放下：4 字 × 12px + 20px 内边距 ≈ 68px，5 个 340px，390 宽刚好 */
+  /* 6 个 tab 要能一屏放下：4 字 × 11.5px + 16px 内边距 ≈ 62px，6 个 372px，
+     390 宽刚好卡进去。仍然保留 overflow-x:auto 兜底小屏（iPhone SE 375px）。 */
+  .tabs button { flex: none; padding: 9px 8px; font-size: 11.5px; line-height: 1.25; }
+
+  /* ---------------- 工坊：单栏 + 分段 ----------------
+     只写 .studio.is-active，不要连 .studio 一起写。
+     styles.css 里 .studio{display:none} 是靠 .view.is-active 打开视图的，
+     这里若把 .studio 也设成 grid，切到台账/陪练时工坊不会消失，
+     会顶在页面最上面把下面的视图挤下去。 */
+  .studio.is-active {
+    display: grid; height: auto; flex: 1; min-height: 0;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .verbar { grid-row: 1; grid-column: 1; }
+  .chat-col, .preview-col, .side-col {
+    grid-row: 2; grid-column: 1; min-height: 0; display: none;
+  }
+  .studio.m-chat .chat-col { display: flex; }
+  .studio.m-paper .preview-col { display: flex; }
+  .studio.m-diag .side-col { display: flex; }
+
+  .chat-col { border-right: 0; }
+  .side-col { border-left: 0; }
+
+  /* 版本条：一行放完。
+     之前把 chips 和按钮拆成两行，结果按钮独自占一行、左边空出半屏，
+     看着像少画了一块。实际不用拆——.ver-list 本身能横滚（overflow-x:auto），
+     版本多了是滚动而不是被按钮挤扁，所以一行就够。
+     动作按钮要 flex:none + 不换行，否则会被 .ver-list 抢走宽度。 */
+  .verbar { padding: 7px 10px; gap: 6px; flex-wrap: nowrap; overflow: hidden; min-height: 0; }
+  .ver-k { display: none; }
+  .ver-list { order: 1; flex: 1 1 auto; width: auto; min-width: 0; overflow-x: auto; }
+  .ver-acts { order: 2; flex: 0 0 auto; width: auto; justify-content: flex-end; gap: 4px; }
+  .ver-btn { padding: 5px 8px; font-size: 12px; line-height: 1; }
+  .ver-btn .lb { display: none; }
+  .ver-btn b { font-weight: 700; }
+  .ver-chip { max-width: 200px; padding: 4px 7px; }
+  .ver-chip .nm { max-width: 110px; }
+
+  /* 底部分段条 */
+  .mobtabs {
+    grid-row: 3; grid-column: 1;
+    display: flex; flex: none; background: #fff;
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    z-index: 6;
+  }
+  .mobtabs button {
+    position: relative; flex: 1; padding: 11px 4px 12px;
+    font-size: 12.5px; color: var(--ink3); letter-spacing: .5px;
+  }
+  .mobtabs button.is-active { color: var(--blue-deep); font-weight: 700; }
+  .mobtabs button.is-active::before {
+    content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 2px; border-radius: 0 0 3px 3px; background: var(--blue);
+  }
+
+  /* ---------------- 预览 ---------------- */
+  .pv-toolbar {
+    height: auto; padding: 7px 10px; gap: 8px; flex-wrap: wrap;
+    row-gap: 6px; align-items: center;
+  }
+  .pv-toolbar .spacer { display: none; }
+  .pv-group { gap: 5px; }
+  .pv-label { font-size: 11px; }
+  .tpl-btn, .mini-btn { padding: 4px 8px; font-size: 11.5px; }
+  .page-badge { margin-left: auto; font-size: 11px; }
+  .pv-toolbar .ghost, .pv-toolbar .primary { padding: 5px 10px; font-size: 12px; }
+  .mob-read-btn { display: inline-flex; align-items: center; }
+  .paper-scroll { padding: 12px 10px 20px; }
+
+  /* 阅读模式：把 A4 纸变成正常的响应式排版。
+     它不是"缩放"，所以字号是真实 14px —— 这才是手机上看得清的唯一办法。 */
+  .paper-scroll.read { display: block; overflow-y: auto; }
+  .paper-scroll.read .paper-frame { width: 100% !important; height: auto !important; }
+  .paper-scroll.read .paper {
+    position: static !important; transform: none !important;
+    width: 100% !important; min-height: 0 !important;
+    padding: 18px 16px 24px; box-shadow: 0 2px 12px rgba(20,30,50,.08);
+    border-radius: 12px; font-size: 14px !important;
+  }
+  .paper-scroll.read .paper.two-col { padding: 0; }
+  .paper-scroll.read .resume-two { grid-template-columns: 1fr; min-height: 0; }
+  .paper-scroll.read .r-side {
+    border-right: 0; border-bottom: 1px solid #eef0f3; padding: 18px 16px;
+  }
+  .paper-scroll.read .r-main { padding: 16px; }
+  .paper-scroll.read .r-side .r-photo { width: 84px; height: 106px; margin: 0 auto 10px; }
+  .paper-scroll.read .r-name { font-size: 1.7em; }
+  .paper-scroll.read .r-head { flex-direction: row; }
+
+  /* ---------------- 右栏 / 对话 ---------------- */
+  /* 不写 min-height:0 的话，flex 子项不会缩到内容高度以下，
+     结果就是输入框被挤出可视区、消息列表把它盖住 */
+  .chat-col, .msgs, .side-body, .paper-scroll { min-height: 0; }
+  .msgs { padding: 12px 10px; }
+  .msg .bubble { font-size: 13.5px; }
+  .chips { padding: 8px 10px 0; }
+  .composer { padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  /* 16px 字号下占位文案会折成两行，而 textarea 只有一行高 → 文字被自己裁掉 */
+  .composer textarea { min-height: 44px; padding: 10px 11px; }
+  .send-btn { padding: 0 14px; }
+  .side-tabs { padding: 6px 8px; }
+  .side-body { padding: 10px; }
+
+  /* ---------------- 台账 ---------------- */
+  .track-inner, .drill-inner { padding: 14px 12px 28px; }
+  .track-head, .drill-head { flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .track-head .primary { margin-left: 0; width: 100%; padding: 9px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi { padding: 9px 11px; }
+  .kpi .n { font-size: 19px; }
+
+  /* 表格 → 卡片。手机上横向滚表格是最糟的选择：用户永远看不到最右列的操作按钮 */
+  .tbl, .tbl tbody, .tbl tr, .tbl td { display: block; width: 100%; }
+  .tbl thead { display: none; }
+  .tbl tr {
+    padding: 10px 12px; border-bottom: 1px solid var(--line2);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px;
+  }
+  .tbl tr:last-child { border-bottom: 0; }
+  .tbl td { padding: 0; border: 0; font-size: 12.5px; }
+  .tbl td::before {
+    content: attr(data-k); display: block;
+    font-size: 10px; color: var(--ink3); margin-bottom: 1px;
+  }
+  .tbl td:nth-child(1)::before { content: "公司"; }
+  .tbl td:nth-child(2)::before { content: "岗位"; }
+  .tbl td:nth-child(3)::before { content: "状态"; }
+  .tbl td:nth-child(4)::before { content: "截止"; }
+  .tbl td:nth-child(5)::before { content: "匹配"; }
+  .tbl td:nth-child(6)::before { content: "备注"; }
+  .tbl td:nth-child(7) { grid-column: 1 / -1; text-align: right; }
+  .tbl td:nth-child(7)::before { display: none; }
+  .tbl td:nth-child(7) .del { padding: 4px 2px; }
+
+  .drill-grid { grid-template-columns: 1fr; }
+
+  /* ---------------- 岗位地图 / 坑库 ---------------- */
+  .wide-inner { padding: 12px 12px 40px; gap: 10px; }
+  .wide-head { gap: 10px; }
+  .wide-head h2 { font-size: 17px; }
+  .wide-head p { font-size: 12px; }
+  .wide-actions { width: 100%; justify-content: space-between; }
+  .ask-bar button { padding: 0 14px; }
+  .fam-chips { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; scrollbar-width: none; }
+  .fam-chips::-webkit-scrollbar { display: none; }
+  .fam-chip { flex: none; }
+  .chain { grid-template-columns: 1fr; padding: 0 12px; }
+  .hero-top { flex-direction: column; gap: 12px; }
+  .hero-meta { flex: 1 1 auto; max-width: none; }
+  .ind-hero { padding: 14px 14px; }
+  .ind-hero h3 { font-size: 15px; }
+  .card-h { padding: 12px 13px 8px; font-size: 12.5px; }
+  .vocab-list { padding: 0 8px 10px; }
+  .vitem summary { padding: 9px 6px; }
+  .vdef { min-width: 0; flex-basis: 100%; margin-top: 2px; }
+  .vbody { padding: 4px 6px 10px; }
+  .vbody p { flex-direction: column; gap: 2px; }
+  .vbody p b { width: auto; }
+  .levels, .probes { padding: 0 12px 12px; }
+  .cks { padding: 0 12px 12px; grid-template-columns: 1fr; }
+  .pits { padding: 0 8px 10px; }
+  .pit-b { flex-direction: column; gap: 2px; }
+  .pit-b b { width: auto; }
+  .pit-filters { flex-direction: column; align-items: stretch; }
+  .pit-filters input { width: 100%; }
+  .stage-tabs { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; padding-bottom: 2px; }
+  .stage-tabs::-webkit-scrollbar { display: none; }
+  .stage-tabs button { flex: none; }
+  #auditText { width: calc(100% - 24px); margin: 0 12px; font-size: 16px; }
+  .audit-actions, #auditOut { padding-left: 12px; padding-right: 12px; }
+
+  /* ---------------- 弹窗：全宽 + 可滚动 ---------------- */
+  /* 手机上弹窗改成「左右贴边、纵向居中」。
+     原来写的是 transform:none 配 top:50%，那样是让弹窗的**上边缘**落在半屏处，
+     于是整个框被推到屏幕下面去，底部按钮紧贴甚至超出屏幕。
+     居中必须留着 -50% 的纵向位移，只把横向位移去掉（横向用 left/right 定位）。 */
+  .modal {
+    width: calc(100vw - 16px) !important;
+    max-height: 88vh; border-radius: 14px; left: 8px; right: 8px;
+    transform: translateY(-50%); top: 50%; margin-top: 0;
+  }
+  .modal.show { transform: translateY(-50%); }
+  .modal.show { animation: none; }
+  .modal-head { padding: 12px 14px; }
+  .modal-body { padding: 14px; }
+  .modal-foot {
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    flex-wrap: wrap; gap: 6px;
+  }
+  .modal-foot .primary, .modal-foot .ghost { padding: 8px 14px; }
+  .form-grid, .vf, .fld-row { grid-template-columns: 1fr; }
+  .plans { grid-template-columns: 1fr; }
+  .pay-split { grid-template-columns: 1fr; gap: 12px; }
+  .member-head { flex-direction: column; gap: 6px; }
+  .toast { bottom: 66px; font-size: 12.5px; max-width: 88vw; text-align: center; }
+
+  /* ---------------- 差异对比 / 定制卡 ---------------- */
+  .drow .dv { font-size: 12.5px; }
+  .vm-row { flex-wrap: wrap; }
+  .vm-act { width: 100%; justify-content: flex-end; }
+  .tm-h { font-size: 10px; }
+}
+
+/* 小平板/横屏：两栏更合适，别浪费宽度 */
+@media (min-width: 640px) and (max-width: 860px) {
+  .drill-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .paper-scroll.read .resume-two { grid-template-columns: 220px 1fr; }
+  .paper-scroll.read .r-side { border-right: 1px solid #eef0f3; border-bottom: 0; }
+}
+
+/* ---------------- 打印：手机上也必须出 A4 ---------------- */
+@media print {
+  .mobtabs, .verbar { display: none !important; }
+  .studio .chat-col, .studio .side-col { display: none !important; }
+  .studio .preview-col,
+  .studio.m-chat .preview-col,
+  .studio.m-diag .preview-col { display: block !important; }
+  .paper-scroll.read { display: block !important; padding: 0 !important; overflow: visible !important; }
+  .paper-scroll.read .paper-frame { width: auto !important; height: auto !important; }
+  .paper-scroll.read .paper {
+    width: 100% !important; padding: 0 !important; min-height: 0 !important;
+    box-shadow: none !important; border-radius: 0 !important; font-size: 13.5px !important;
+  }
+  .paper-scroll.read .resume-two { grid-template-columns: 236px 1fr !important; min-height: 0 !important; }
+  .paper-scroll.read .r-side { border-right: 1px solid #eef0f3 !important; border-bottom: 0 !important; }
+}
+
+/* ---- v1.4 纸墨改版：移动端补齐 ----
+   paper.css 先把圆角全局归零，但手机上有几处仍是改版前的小圆角
+   （logo、账户按钮），在 ≤860px 下统一成直角，和桌面一致。 */
+@media (max-width: 860px) {
+  .brand-mark, .bot-ava, .acct, .engine, .ghost {
+    border-radius: 0 !important;
+  }
+  /* 版本条里的说明文字：单独一行放不下时给省略号，不要换行——
+     换行会把 .verbar 撑高，而 .verbar 在大屏样式里是定高且 overflow:hidden 的，
+     第二行会被连字带线一起切掉。 */
+  .ver-list { line-height: 1.5; }
+  .ver-empty {
+    display: block; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 100%;
+  }
+  .chat-head { padding: 9px 12px; }
+  .bot-ava { width: 26px; height: 26px; font-size: 13px; }
+}

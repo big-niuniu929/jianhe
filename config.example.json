@@ -1,0 +1,25 @@
+{
+  "_说明": "把这个文件改名为 config.json 就会生效。不配也能跑：诊断 / JD 匹配 / 证据核验 / 追问清单 全部由规则引擎完成。",
+  "llm": {
+    "provider": "deepseek",
+    "base_url": "https://api.deepseek.com/v1",
+    "model": "deepseek-chat",
+    "api_key": "",
+    "timeout": 60
+  },
+  "_备选配置": {
+    "豆包方舟": {
+      "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+      "model": "你的推理接入点ID（ep-xxxx）"
+    },
+    "通义千问": {
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model": "qwen-plus"
+    },
+    "本地 Ollama": {
+      "base_url": "http://127.0.0.1:11434/v1",
+      "model": "qwen2.5:7b",
+      "api_key": "ollama"
+    }
+  }
+}

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>落笔 · 运营后台</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#3370ff;--blue-deep:#245bdb;--blue-bg:#eef3ff;--green:#0e7a5f;--green-bg:#e7f6f0;
+  --red:#d83931;--red-bg:#fdecea;--orange:#de7802;--orange-bg:#fff3e0;--purple:#7f3bf5;
+  --ink:#1f2329;--ink2:#646a73;--ink3:#8f959e;--line:#e3e6ea;--line2:#eff0f1;--bg:#f5f6f7}
+body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);
+  font-size:13px;line-height:1.55;padding:20px 24px 60px;max-width:1180px;margin:0 auto}
+h1{font-size:18px;letter-spacing:.2px}
+h2{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+h2 .sub{font-weight:400;color:var(--ink3);font-size:11.5px}
+.head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.head p{color:var(--ink3);font-size:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+.kpi .lab{font-size:11.5px;color:var(--ink3);margin-bottom:4px}
+.kpi .val{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1.15}
+.kpi .val small{font-size:12px;font-weight:500;color:var(--ink3);margin-left:3px}
+.kpi .note{font-size:11px;color:var(--ink3);margin-top:3px}
+.kpi.warn .val{color:var(--orange)}
+.kpi.good .val{color:var(--green)}
+.funnel{display:flex;flex-direction:column;gap:6px}
+.fstep{display:grid;grid-template-columns:96px 1fr 120px;align-items:center;gap:10px}
+.fstep .nm{font-size:12px;color:var(--ink2)}
+.bar{height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#3370ff,#6b96ff);border-radius:6px;
+  transition:width .5s cubic-bezier(.2,.7,.3,1)}
+.bar.drop i{background:linear-gradient(90deg,#de7802,#f0a44a)}
+.fstep .num{font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.fstep .num b{font-size:13px}
+.fstep .num span{color:var(--ink3);margin-left:6px}
+.drop-tip{font-size:11.5px;color:var(--orange);padding-left:106px;margin:2px 0 4px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+th{color:var(--ink3);font-weight:600;font-size:11px;background:#fafbfc}
+td.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px}
+tr:hover td{background:#fafbfc}
+.pill{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:999px;font-weight:600}
+.pill.g{background:var(--green-bg);color:var(--green)}
+.pill.o{background:var(--orange-bg);color:var(--orange)}
+.pill.b{background:var(--blue-bg);color:var(--blue-deep)}
+.pill.n{background:#f3f4f6;color:var(--ink3)}
+.row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--ink3)}
+input,select{padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:12px;outline:none;font-family:inherit}
+input:focus{border-color:var(--blue)}
+button{padding:6px 14px;border-radius:7px;background:var(--blue);color:#fff;border:none;font-size:12px;
+  font-weight:600;cursor:pointer;font-family:inherit}
+button:hover{background:var(--blue-deep)}
+button.g2{background:#fff;color:var(--ink2);border:1px solid var(--line)}
+.empty{color:var(--ink3);font-size:12px;padding:14px 0;text-align:center}
+code{background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:11.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>落笔 · 运营后台</h1>
+  <p id="stamp">读取中…</p>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>转化漏斗 <span class="sub" id="funnelSub">近 30 天 · 按人头</span></h2>
+    <div class="funnel" id="funnel"></div>
+  </div>
+  <div class="card">
+    <h2>诊断结论 <span class="sub">这几条决定下一步做什么</span></h2>
+    <div id="insights"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>钱与成本 <span class="sub">预付的点数是负债，不是利润</span></h2>
+  <div class="kpis" id="revKpis" style="grid-template-columns:repeat(5,1fr);margin-bottom:10px"></div>
+  <div id="revNote" style="font-size:11.5px;color:var(--ink3);line-height:1.7"></div>
+</div>
+
+<div class="card">
+  <h2>发兑换码 <span class="sub">收钱后手工发，零支付接口</span></h2>
+  <div class="row">
+    <label class="f">档位<select id="cKind">
+      <option value="member">会员 ¥4.9（不限导出 + 赠 20 点）</option>
+      <option value="p100">点数包 100 点 ¥5</option>
+      <option value="p260" selected>点数包 260 点 ¥12</option>
+      <option value="p700">点数包 700 点 ¥29</option>
+    </select></label>
+    <label class="f">到账点数<input id="cCredits" type="number" value="260" min="0" max="9999" style="width:90px"></label>
+    <label class="f">数量<input id="cN" type="number" value="1" min="1" max="50" style="width:80px"></label>
+    <label class="f">备注<input id="cNote" placeholder="给谁的 / 哪笔订单" style="width:200px"></label>
+    <button id="btnGen">生成</button>
+  </div>
+  <div id="genOut" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+  <h2>兑换码 <span class="sub" id="codeSub"></span></h2>
+  <div style="max-height:260px;overflow:auto"><table id="codeTable"></table></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>用户 <span class="sub" id="userSub"></span></h2>
+    <div style="max-height:280px;overflow:auto"><table id="userTable"></table></div>
+  </div>
+  <div class="card">
+    <h2>留资 <span class="sub">还没付钱但说要买的人，优先打</span></h2>
+    <div style="max-height:280px;overflow:auto"><table id="leadTable"></table></div>
+  </div>
+</div>
+
+<script>
+const KEY = new URLSearchParams(location.search).get('key') || '';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function get(p) {
+  const r = await fetch(p, { headers: { 'X-Admin-Key': KEY } });
+  if (!r.ok) throw new Error(r.status === 403 ? '密钥不对' : '请求失败 ' + r.status);
+  return r.json();
+}
+async function post(p, body) {
+  const r = await fetch(p, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': KEY },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (!r.ok || d.ok === false) throw new Error(d.error || '失败');
+  return d;
+}
+
+const pct = (a, b) => (!b ? 0 : Math.round(a / b * 100));
+
+async function loadOverview() {
+  const d = await get('/api/admin/overview');
+  const o = d.overview;
+  $('#stamp').textContent = '数据截至 ' + new Date(o.now * 1000).toLocaleString('zh-CN');
+  const kpis = [
+    { lab: '注册用户', val: o.users.total, small: '今日 +' + o.users.today, note: '账号数' },
+    { lab: '24h 活跃', val: o.active24h, note: '有任意动作的人' },
+    { lab: '累计导出', val: o.exports.total, small: '今日 ' + o.exports.today, note: '真实付费意愿的代理指标', cls: o.exports.total ? 'good' : '' },
+    { lab: '兑换码使用率', val: o.codes.rate + '%', small: o.codes.used + '/' + o.codes.made, note: '发出去了但没用，说明流程有阻力', cls: o.codes.made && o.codes.rate < 50 ? 'warn' : '' },
+    { lab: '留资', val: o.leads, note: '说过要买的人', cls: o.leads ? 'good' : '' },
+  ];
+  $('#kpis').innerHTML = kpis.map((k) => `
+    <div class="kpi ${k.cls || ''}">
+      <div class="lab">${k.lab}</div>
+      <div class="val">${k.val}${k.small ? `<small>${k.small}</small>` : ''}</div>
+      <div class="note">${k.note}</div>
+    </div>`).join('');
+}
+
+const DIAG = {
+  import: ['没人导入简历 = 落地页没说服人', '把首屏那句话换成"粘贴你的简历，30 秒告诉你哪句会被面试官问穿"'],
+  lint: ['导入完没看到诊断 = 解析失败', '先看下面积分为 0 的档案，八成是经历段落没切出来'],
+  rewrite: ['看了诊断但不改 = 只指出问题没给下一步', '诊断卡片里每条问题后面必须有"改写这条"按钮'],
+  gate: ['大量撞付费墙 = 墙的位置可能太靠前', '如果 gate 数远大于 export，说明用户还没被说服就撞墙了'],
+  export: ['改写完不导出 = 觉得还不够好，或者根本没投', '导出前加一句"其实已经能投了"，降低完美主义门槛'],
+  paid: ['导出多但付费少 = 定价或免费额度问题', '免费 3 次可能太多，试 1 次，其余靠 5 次包'],
+};
+
+async function loadRevenue() {
+  const d = await get('/api/admin/revenue');
+  const r = d.revenue;
+  const g = r.grossRate == null ? '—' : r.grossRate + '%';
+  const items = [
+    { lab: '实收现金', val: '¥' + r.cashYuan, small: r.paidUsers + ' 人付过', note: '近 ' + r.days + ' 天充值流水', cls: r.cashYuan ? 'good' : '' },
+    { lab: '算力成本', val: '¥' + r.costYuan, small: r.aiCalls + ' 次调用', note: '均 ' + r.avgCostPerCall + ' 元/次', cls: '' },
+    { lab: '毛利', val: '¥' + r.grossYuan, small: g, note: '现金 − 已发生的成本', cls: r.grossYuan > 0 ? 'good' : 'warn' },
+    { lab: '会员', val: r.members, small: '人', note: '¥4.9 一次性', cls: r.members ? 'good' : '' },
+    { lab: '未消耗点数', val: r.outstandingPoints, small: '≈¥' + r.liabilityYuan, note: '这是负债，别当成利润花', cls: r.outstandingPoints ? 'warn' : '' },
+  ];
+  $('#revKpis').innerHTML = items.map((k) => `
+    <div class="kpi ${k.cls}">
+      <div class="lab">${k.lab}</div>
+      <div class="val">${k.val}${k.small ? `<small>${k.small}</small>` : ''}</div>
+      <div class="note">${k.note}</div>
+    </div>`).join('');
+  $('#revNote').textContent = r.note;
+}
+
+async function loadFunnel() {
+  const d = await get('/api/admin/funnel?days=30');
+  const steps = d.funnel.steps;
+  const top = steps[0] ? steps[0].count : 0;
+  const max = Math.max(1, ...steps.map((s) => s.count));
+  $('#funnel').innerHTML = steps.map((s, i) => {
+    const drop = i > 0 && s.fromPrev !== null && s.fromPrev < 55;
+    const tail = i === 0 ? ''
+      : s.skipped ? ' · 跳步'
+      : s.fromPrev === null ? ' · —'
+      : ' · ' + s.fromPrev + '%';
+    return `<div class="fstep">
+      <span class="nm">${s.label}</span>
+      <div class="bar ${drop ? 'drop' : ''}"><i style="width:${Math.round(s.count / max * 100)}%"></i></div>
+      <span class="num"><b>${s.count}</b><span>人${s.times > s.count ? ' / ' + s.times + '次' : ''}${tail}</span></span>
+    </div>`;
+  }).join('') + `<div class="drop-tip">橙色 = 相邻两步掉了一半以上，那是当前最大的漏点。「跳步」= 有人绕过上一步直接来了，说明入口不止一个</div>`;
+
+  // 取掉得最狠的一步给结论
+  let worst = null;
+  steps.forEach((s, i) => {
+    if (i === 0 || s.fromPrev === null || s.count === 0) return;
+    if (!worst || s.fromPrev < worst.fromPrev) worst = s;
+  });
+  const lines = [];
+  if (worst && worst.fromPrev < 70) {
+    const t = DIAG[worst.key] || ['某一步掉得厉害', ''];
+    lines.push({ t: `最大漏点：${worst.label}（${worst.fromPrev}%）`, d: t[0], a: t[1] });
+  } else if (top === 0) {
+    lines.push({ t: '还没有数据', d: '把链接发出去，先拿 20 个真人跑一遍，比再写一个功能有用', a: '' });
+  } else {
+    lines.push({ t: '漏斗没有明显断裂', d: '当前各步转化都在健康区间', a: '下一步该加的是流量，不是功能' });
+  }
+  const r = d.retention;
+  lines.push({ t: '回访：D1 ' + r.d1 + '% / D3 ' + r.d3 + '% / D7 ' + r.d7 + '%',
+    d: r.d1 < 20 ? '几乎没人第二天回来 —— 这是求职场景的正常表现，别为此加社交功能' : '有一定回访，说明档案沉淀起作用了',
+    a: r.d1 >= 20 ? '可以做"投递台账提醒"把人拉回来' : '把力气放在拉新，不是留存' });
+  const o = (await get('/api/admin/overview')).overview;
+  lines.push({ t: '解析失败率 ' + o.parseFailRate + '%',
+    d: o.parseFailRate > 15 ? '超过 15%，这是纯技术债，会直接吃掉转化' : '在可接受范围',
+    a: o.parseFailRate > 15 ? '收集失败样本，优先修段落切分' : '' });
+  $('#insights').innerHTML = lines.map((x) => `
+    <div style="padding:9px 0;border-bottom:1px dashed var(--line2)">
+      <div style="font-size:12.5px;font-weight:600">${esc(x.t)}</div>
+      <div style="font-size:12px;color:var(--ink2);margin-top:2px">${esc(x.d)}</div>
+      ${x.a ? `<div style="font-size:11.5px;color:var(--blue-deep);margin-top:2px">→ ${esc(x.a)}</div>` : ''}
+    </div>`).join('');
+}
+
+async function loadCodes() {
+  const d = await get('/api/admin/codes');
+  const rows = d.items;
+  $('#codeSub').textContent = `${rows.length} 条`;
+  $('#codeTable').innerHTML = `<thead><tr><th>码</th><th>档位</th><th>额度</th><th>状态</th><th>谁用了</th><th>备注</th></tr></thead><tbody>
+    ${rows.length ? rows.map((c) => `<tr>
+      <td class="mono">${esc(c.code)}</td><td>${esc(c.kind)}</td><td>${c.credits}</td>
+      <td>${c.used_by ? '<span class="pill g">已用</span>' : '<span class="pill n">未用</span>'}</td>
+      <td>${esc(c.used_email || '—')}</td><td>${esc(c.note || '')}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">还没有码</td></tr>'}
+  </tbody>`;
+}
+
+async function loadUsers() {
+  const d = await get('/api/admin/users');
+  const rows = d.items;
+  $('#userSub').textContent = `${rows.length} 个`;
+  $('#userTable').innerHTML = `<thead><tr><th>邮箱</th><th>额度</th><th>导出</th><th>注册</th><th>最近登录</th></tr></thead><tbody>
+    ${rows.length ? rows.map((u) => `<tr>
+      <td>${esc(u.email)}</td>
+      <td>${u.credits > 0 ? `<span class="pill b">${u.credits}</span>` : '<span class="pill o">0</span>'}</td>
+      <td>${u.exports}</td>
+      <td>${new Date(u.created_at * 1000).toLocaleDateString()}</td>
+      <td>${u.last_login ? new Date(u.last_login * 1000).toLocaleDateString() : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">还没有注册用户</td></tr>'}
+  </tbody>`;
+}
+
+async function loadLeads() {
+  const d = await get('/api/admin/leads');
+  const rows = d.items;
+  $('#leadTable').innerHTML = `<thead><tr><th>联系方式</th><th>意图</th><th>时间</th></tr></thead><tbody>
+    ${rows.length ? rows.map((l) => `<tr>
+      <td><b>${esc(l.contact)}</b></td><td>${esc(l.intent || '—')}</td>
+      <td>${new Date(l.ts * 1000).toLocaleString('zh-CN')}</td>
+    </tr>`).join('') : '<tr><td colspan="3" class="empty">还没有留资 —— 说明还没人走到付费墙，或者墙不够显眼</td></tr>'}
+  </tbody>`;
+}
+
+$('#btnGen').onclick = async () => {
+  try {
+    const d = await post('/api/admin/gencode', {
+      n: +$('#cN').value, credits: +$('#cCredits').value,
+      kind: $('#cKind').value, note: $('#cNote').value,
+    });
+    $('#genOut').innerHTML = `<div style="background:var(--green-bg);border-radius:8px;padding:10px 12px">
+      <div style="font-size:11.5px;color:var(--green);margin-bottom:5px">生成了 ${d.codes.length} 个，直接复制发出去：</div>
+      <code style="display:block;white-space:pre-wrap;background:#fff;padding:8px;user-select:all">${esc(d.codes.join('\n'))}</code>
+    </div>`;
+    loadCodes();
+  } catch (e) { $('#genOut').textContent = e.message; }
+};
+$('#cKind').onchange = () => {
+  const m = { single: 1, pack5: 5, season: 20, trial: 3 };
+  $('#cCredits').value = m[$('#cKind').value] || 1;
+};
+
+(async () => {
+  try {
+    await loadOverview();
+    await loadRevenue();
+    await loadFunnel();
+    await loadCodes();
+    await loadUsers();
+    await loadLeads();
+  } catch (e) {
+    document.body.innerHTML = `<div style="padding:40px;font-size:14px;color:#d83931">${esc(e.message)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>
